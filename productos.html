@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Título de la pestaña -->
+    <title>Productos | TechStore</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <!-- Estilos propios -->
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body>
+
+<!-- ================================
+     NAVBAR
+================================ -->
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">
+            TechStore
+        </a>
+    </div>
+</nav>
+
+<!-- ================================
+     HERO PRODUCTOS
+================================ -->
+<section class="hero-productos text-white d-flex align-items-center">
+    <div class="container text-center">
+        <h1 class="fw-bold">Nuestros Productos</h1>
+        <p>Accesorios tecnológicos para todos</p>
+    </div>
+</section>
+
+<!-- ================================
+     LISTADO DE PRODUCTOS
+================================ -->
+<section class="container my-5">
+
+    <p class="fw-bold">
+        Productos encontrados: <span id="contador">0</span>
+    </p>
+
+    <input type="text"
+           class="form-control mb-3"
+           placeholder="Buscar producto..."
+           onkeyup="buscarProducto(this.value)">
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label class="fw-bold">Filtrar por categoría</label>
+            <select class="form-select" onchange="filtrarProductos()">
+                <option value="todos">Todos</option>
+                <option value="mouse">Mouse</option>
+                <option value="teclado">Teclados</option>
+                <option value="audifonos">Audífonos</option>
+                <option value="monitor">Monitores</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- PRODUCTO 1 -->
+        <div class="col-md-3 producto" data-categoria="mouse">
+            <div class="card h-100">
+                <a href="producto-mouse.html" class="text-decoration-none text-dark">
+    <img src="img/mouse.jpg" class="card-img-top" alt="Mouse Gamer">
+</a>
+
+                <div class="card-body">
+                    <h5>Mouse Gamer</h5>
+
+                    <ul class="list-unstyled small">
+                        <li>🟣 DPI: 12.000</li>
+                        <li>🟣 Inalámbrico</li>
+                        <li>🟣 RGB</li>
+                    </ul>
+
+                    <p class="fw-bold">$19.990 CLP</p>
+
+                    <button class="btn btn-primary w-100"
+                            onclick="agregarProducto(this)">
+                        Agregar
+                    </button>
+
+                    <small class="text-success fw-bold d-none">
+                        ✔ Producto agregado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTO 2 -->
+        <div class="col-md-3 producto" data-categoria="teclado">
+            <div class="card h-100">
+                <img src="img/teclado1.jpg" class="card-img-top" alt="Teclado Gamer">
+
+                <div class="card-body">
+                    <h5>Teclado Mecánico</h5>
+
+                    <ul class="list-unstyled small">
+                        <li>🟣 Mecánico</li>
+                        <li>🟣 RGB</li>
+                        <li>🟣 USB</li>
+                    </ul>
+
+                    <p class="fw-bold">$39.990 CLP</p>
+
+                    <button class="btn btn-primary w-100"
+                            onclick="agregarProducto(this)">
+                        Agregar
+                    </button>
+
+                    <small class="text-success fw-bold d-none">
+                        ✔ Producto agregado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTO 3 -->
+        <div class="col-md-3 producto" data-categoria="audifonos">
+            <div class="card h-100">
+                <img src="img/audifonos1.jpg" class="card-img-top" alt="Audífonos Gamer">
+
+                <div class="card-body">
+                    <h5>Audífonos Gamer</h5>
+
+                    <ul class="list-unstyled small">
+                        <li>🟣 Micrófono</li>
+                        <li>🟣 Sonido 7.1</li>
+                        <li>🟣 USB</li>
+                    </ul>
+
+                    <p class="fw-bold">$29.990 CLP</p>
+
+                    <button class="btn btn-primary w-100"
+                            onclick="agregarProducto(this)">
+                        Agregar
+                    </button>
+
+                    <small class="text-success fw-bold d-none">
+                        ✔ Producto agregado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTO 4 -->
+        <div class="col-md-3 producto" data-categoria="monitor">
+            <div class="card h-100">
+                <img src="img/monitor.jpg" class="card-img-top" alt="Monitor Gamer">
+
+                <div class="card-body">
+                    <h5>Monitor 24”</h5>
+
+                    <ul class="list-unstyled small">
+                        <li>🟣 Full HD</li>
+                        <li>🟣 144Hz</li>
+                        <li>🟣 HDMI</li>
+                    </ul>
+
+                    <p class="fw-bold">$159.990 CLP</p>
+
+                    <button class="btn btn-primary w-100"
+                            onclick="agregarProducto(this)">
+                        Agregar
+                    </button>
+
+                    <small class="text-success fw-bold d-none">
+                        ✔ Producto agregado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTO 5 -->
+        <div class="col-md-3 producto" data-categoria="webcam">
+            <div class="card h-100">
+                <img src="img/webcam1.jpg" class="card-img-top" alt="Webcam">
+
+                <div class="card-body">
+                    <h5>Webcam HD</h5>
+
+                    <ul class="list-unstyled small">
+                        <li>🟣 1080p</li>
+                        <li>🟣 Micrófono</li>
+                        <li>🟣 USB</li>
+                    </ul>
+
+                    <p class="fw-bold">$24.990 CLP</p>
+
+                    <button class="btn btn-primary w-100"
+                            onclick="agregarProducto(this)">
+                        Agregar
+                    </button>
+
+                    <small class="text-success fw-bold d-none">
+                        ✔ Producto agregado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTO 6 -->
+        <div class="col-md-3 producto" data-categoria="ssd">
+            <div class="card h-100">
+                <img src="img/ssd1.jpg" class="card-img-top" alt="SSD">
+
+                <div class="card-body">
+                    <h5>SSD NVMe 500GB</h5>
+
+                    <ul class="list-unstyled small">
+                        <li>🟣 500GB</li>
+                        <li>🟣 NVMe</li>
+                        <li>🟣 Alta velocidad</li>
+                    </ul>
+
+                    <p class="fw-bold">$49.990 CLP</p>
+
+                    <button class="btn btn-primary w-100"
+                            onclick="agregarProducto(this)">
+                        Agregar
+                    </button>
+
+                    <small class="text-success fw-bold d-none">
+                        ✔ Producto agregado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTO 7 -->
+        <div class="col-md-3 producto" data-categoria="silla">
+            <div class="card h-100">
+                <img src="img/silla2.jpg" class="card-img-top" alt="Silla Gamer">
+
+                <div class="card-body">
+                    <h5>Silla Gamer</h5>
+
+                    <ul class="list-unstyled small">
+                        <li>🟣 Ergonómica</li>
+                        <li>🟣 Reclinable</li>
+                        <li>🟣 Ajustable</li>
+                    </ul>
+
+                    <p class="fw-bold">$129.990 CLP</p>
+
+                    <button class="btn btn-primary w-100"
+                            onclick="agregarProducto(this)">
+                        Agregar
+                    </button>
+
+                    <small class="text-success fw-bold d-none">
+                        ✔ Producto agregado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTO 8 -->
+        <div class="col-md-3 producto" data-categoria="parlantes">
+            <div class="card h-100">
+                <img src="img/parlantes1.webp" class="card-img-top" alt="Parlantes">
+
+                <div class="card-body">
+                    <h5>Parlantes RGB</h5>
+
+                    <ul class="list-unstyled small">
+                        <li>🟣 Estéreo</li>
+                        <li>🟣 RGB</li>
+                        <li>🟣 USB</li>
+                    </ul>
+
+                    <p class="fw-bold">$34.990 CLP</p>
+
+                    <button class="btn btn-primary w-100"
+                            onclick="agregarProducto(this)">
+                        Agregar
+                    </button>
+
+                    <small class="text-success fw-bold d-none">
+                        ✔ Producto agregado
+                    </small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ================================
+     FOOTER
+================================ -->
+<footer class="bg-dark text-white text-center p-4 mt-5">
+    <p>© 2026 TechStore</p>
+    <p>Contacto: contacto@techstore.cl</p>
+
+    <div>
+        <i class="fa-brands fa-instagram me-2"></i>
+        <i class="fa-brands fa-facebook"></i>
+    </div>
+</footer>
+
+<!-- JS -->
+<script src="js/app.js"></script>
+<script src="js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
