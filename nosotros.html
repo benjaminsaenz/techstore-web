@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Título de la pestaña -->
+    <title>Nosotros | TechStore</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <!-- Estilos propios -->
+    <link rel="stylesheet" href="css/estilos.css">
+
+    <!-- Iconos -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<!-- ================================
+     NAVBAR PRINCIPAL
+================================ -->
+<nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+    <div class="container-fluid">
+
+        <!-- Logo -->
+        <a class="navbar-brand" href="index.html">
+            TechStore
+        </a>
+
+        <!-- Botón responsive -->
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarColor01">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Menú -->
+        <div class="collapse navbar-collapse" id="navbarColor01">
+
+            <ul class="navbar-nav me-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="nosotros.html">
+                        Nosotros
+                    </a>
+                </li>
+
+                <!-- Menú desplegable -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle"
+                       data-bs-toggle="dropdown"
+                       href="#">
+                        Menú
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="productos.html">Productos</a>
+                        <a class="dropdown-item" href="contacto.html">Contacto</a>
+                        <a class="dropdown-item" href="login.html">Login</a>
+                    </div>
+                </li>
+
+            </ul>
+
+            <!-- Carrito -->
+            <a class="nav-link position-relative text-white fs-3"
+               href="carrito.html">
+                <i class="fa-solid fa-basket-shopping"></i>
+            </a>
+
+            <!-- Buscador -->
+            <form class="d-flex ms-3">
+                <input class="form-control me-2"
+                       type="search"
+                       placeholder="Buscar">
+                <button class="btn btn-secondary">
+                    Buscar
+                </button>
+            </form>
+
+        </div>
+    </div>
+</nav>
+
+<!-- ================================
+     CONTENIDO PRINCIPAL
+================================ -->
+<main class="container my-5">
+
+    <h2 class="text-center mb-4">
+        Sobre Nosotros
+    </h2>
+
+    <!-- SECCIÓN 1 -->
+    <div class="row align-items-center mb-5">
+
+        <div class="col-md-6">
+            <img src="img/nosotros1.jpg"
+                 class="img-fluid rounded shadow"
+                 alt="Tecnología y accesorios">
+        </div>
+
+        <div class="col-md-6">
+            <p>
+                TechStore nace con la pasión por la tecnología y el deseo de acercar los mejores
+                accesorios tecnológicos a las personas. Comenzamos como una idea simple: ofrecer
+                productos confiables, modernos y accesibles.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- SECCIÓN 2 -->
+    <div class="row align-items-center mb-5 flex-md-row-reverse">
+
+        <div class="col-md-6">
+            <img src="img/nosotros2.jpg"
+                 class="img-fluid rounded shadow"
+                 alt="Equipo de trabajo">
+        </div>
+
+        <div class="col-md-6">
+            <p>
+                Nos especializamos en la venta de accesorios tecnológicos cuidadosamente
+                seleccionados, pensados para acompañar el ritmo de un mundo cada vez más conectado.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- SECCIÓN 3 -->
+    <div class="row align-items-center">
+
+        <div class="col-md-6">
+            <img src="img/nosotros3.jpg"
+                 class="img-fluid rounded shadow"
+                 alt="Clientes satisfechos">
+        </div>
+
+        <div class="col-md-6">
+            <p>
+                Nuestro compromiso es brindar calidad, buen servicio y una atención cercana,
+                ayudando a nuestros clientes a encontrar exactamente lo que necesitan.
+            </p>
+        </div>
+
+    </div>
+
+</main>
+
+<!-- Bootstrap JS -->
+<script src="js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
