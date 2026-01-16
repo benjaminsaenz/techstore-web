@@ -9,7 +9,8 @@ import Contacto from "./pages/Contacto.jsx";
 import Login from "./pages/Login.jsx";
 import Registro from "./pages/Registro.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
-import AdminPanel from "./pages/AdminPanel.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+
 
 export default function App() {
   return (
@@ -24,7 +25,10 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/admin-login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/admin/*"element={ <AdminDashboard />
+  }
+/>
+
       </Routes>
     </BrowserRouter>
   );

@@ -94,7 +94,8 @@ export default function AdminLogin() {
 }
 
 export function isAdmin() {
-  return localStorage.getItem(ADMIN_KEY) === "1";
+  return localStorage.setItem("techstore_is_admin_v1", "1");
+;
 }
 
 export function logoutAdmin() {

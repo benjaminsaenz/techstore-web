@@ -46,7 +46,7 @@ function validarFormulario() {
     }   
 
     if (!validarRutModulo11(rut)) {
-    document.getElementById("msgRut").textContent = "RUT inválido (módulo 11)";
+    document.getElementById("msgRut").textContent = "RUT inválido";
     return false;
 }
 

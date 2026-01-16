@@ -35,7 +35,7 @@ export default function Registro() {
     if (!validarRutFormato(rut)) {
       errors.rut = "Formato de RUT inválido";
     } else if (!validarRutModulo11(rut)) {
-      errors.rut = "RUT inválido (módulo 11)";
+      errors.rut = "RUT inválido";
     }
 
     if (!telefono || Number.isNaN(Number(telefono))) errors.telefono = "Teléfono inválido";
