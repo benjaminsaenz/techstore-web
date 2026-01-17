@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
 import { clearCart, formatCLP, getCart, saveCart } from "../utils/cart.js";
 import { createReceipt, registerSaleIfApproved, saveLastReceipt } from "../utils/checkout.js";
 
+/**
+ * Carrito
+ * - Muestra productos agregados y permite modificar cantidad/eliminar
+ * - Botones simulación de pago: APROBADA/RECHAZADA
+ * - Para flujo "más completo", también existe la ruta /checkout
+ */
 export default function Carrito() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [receipt, setReceipt] = useState(null);
   const [payError, setPayError] = useState("");
 
   useEffect(() => {
@@ -28,38 +34,35 @@ export default function Carrito() {
     saveCart(next);
   };
 
-  const total = useMemo(() => {
-    return items.reduce((acc, it) => acc + Number(it.price) * Number(it.qty || 1), 0);
-  }, [items]);
+  const total = useMemo(
+    () => items.reduce((acc, it) => acc + Number(it.price) * Number(it.qty || 1), 0),
+    [items]
+  );
 
-  const handleApproved = () => {
+  const payApproved = () => {
     setPayError("");
+    if (!items.length) return setPayError("No hay productos en el carrito.");
+    if (total <= 0) return setPayError("El total no puede ser 0 o negativo.");
 
-    if (items.length === 0) {
-      setPayError("No hay productos en el carrito.");
-      return;
-    }
-    if (total <= 0) {
-      setPayError("El total no puede ser 0 o negativo.");
-      return;
-    }
+    const receipt = createReceipt({ status: "APROBADA", items });
+    saveLastReceipt(receipt);
+    registerSaleIfApproved(receipt);
 
-    const r = createReceipt({ status: "APROBADA", items });
-    saveLastReceipt(r);
-    registerSaleIfApproved(r);
-
-    // ✅ vaciar carrito porque fue aprobada
     clearCart();
     setItems([]);
 
-    setReceipt(r);
+    navigate("/pago-exitoso");
   };
 
-  const handleRejected = () => {
-    const r = createReceipt({ status: "RECHAZADA", items });
-    saveLastReceipt(r);
-    setReceipt(r);
+  const payRejected = () => {
     setPayError("❌ No se realizó el pago. Intenta nuevamente o usa otro medio.");
+
+    if (!items.length) return;
+
+    const receipt = createReceipt({ status: "RECHAZADA", items });
+    saveLastReceipt(receipt);
+
+    navigate("/pago-error");
   };
 
   return (
@@ -91,7 +94,7 @@ export default function Carrito() {
                   {items.map((it) => (
                     <tr key={it.id}>
                       <td>
-                        <img src={it.img} width="70" alt={it.name} />
+                        <img src={it.img} width="70" alt={it.name} style={{ objectFit: "cover" }} />
                       </td>
                       <td>{it.name}</td>
                       <td>{formatCLP(it.price)}</td>
@@ -138,12 +141,14 @@ export default function Carrito() {
               <div className="text-end">
                 <p className="fw-bold fs-5 mb-2">Total: {formatCLP(total)}</p>
 
-                {/* ✅ botones nuevos */}
                 <div className="d-flex gap-2 justify-content-end flex-wrap">
-                  <button className="btn btn-success" onClick={handleApproved} type="button">
+                  <Link to="/checkout" className="btn btn-outline-dark">
+                    Ir a Checkout
+                  </Link>
+                  <button className="btn btn-success" onClick={payApproved} type="button">
                     ✅ Compra aprobada
                   </button>
-                  <button className="btn btn-danger" onClick={handleRejected} type="button">
+                  <button className="btn btn-danger" onClick={payRejected} type="button">
                     ❌ Pago rechazado
                   </button>
                 </div>
@@ -153,91 +158,9 @@ export default function Carrito() {
             {payError && <div className="alert alert-danger mt-3 mb-0">{payError}</div>}
           </>
         )}
-
-        {/* ✅ Boleta / comprobante */}
-        {receipt && (
-          <div className="card mt-4">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <h5 className="m-0">Boleta / Comprobante</h5>
-                <span
-                  className={`ms-auto badge ${
-                    receipt.status === "APROBADA" ? "text-bg-success" : "text-bg-danger"
-                  }`}
-                >
-                  {receipt.status}
-                </span>
-              </div>
-
-              <hr />
-
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <div className="small text-muted">ID</div>
-                  <div className="fw-bold">{receipt.id}</div>
-
-                  <div className="small text-muted mt-2">Fecha</div>
-                  <div>{new Date(receipt.dateISO).toLocaleString("es-CL")}</div>
-                </div>
-
-                <div className="col-md-6">
-                  <div className="small text-muted">Cliente</div>
-                  <div className="fw-bold">{receipt.customer?.name}</div>
-
-                  <div className="small text-muted mt-2">Correo</div>
-                  <div>{receipt.customer?.email}</div>
-
-                  <div className="small text-muted mt-2">Dirección</div>
-                  <div>{receipt.customer?.address}</div>
-                </div>
-              </div>
-
-              <div className="table-responsive mt-4">
-                <table className="table table-sm align-middle">
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th className="text-end">Precio</th>
-                      <th className="text-end">Cant.</th>
-                      <th className="text-end">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(receipt.items || []).map((it) => (
-                      <tr key={it.id}>
-                        <td>{it.name}</td>
-                        <td className="text-end">{formatCLP(it.price)}</td>
-                        <td className="text-end">{it.qty}</td>
-                        <td className="text-end">{formatCLP(it.price * it.qty)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <th colSpan={3} className="text-end">
-                        TOTAL
-                      </th>
-                      <th className="text-end">{formatCLP(receipt.total)}</th>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              <div className="d-flex gap-2 flex-wrap">
-                <button className="btn btn-outline-secondary" onClick={() => window.print()} type="button">
-                  🖨️ Imprimir
-                </button>
-                <button className="btn btn-outline-primary" onClick={() => setReceipt(null)} type="button">
-                  Cerrar boleta
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </main>
 
       <Footer />
     </>
   );
 }
-

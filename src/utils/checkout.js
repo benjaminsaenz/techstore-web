@@ -1,13 +1,24 @@
+/**
+ * checkout.js
+ *
+ * Utilidades de "pago" (simulado) SIN backend.
+ * - Genera boletas (receipt)
+ * - Guarda la última boleta en localStorage
+ * - Registra ventas aprobadas en admin_sales_v1 para que aparezcan en AdminVentas
+ *
+ * IMPORTANTE: si tu login/registro guarda el usuario con otra key,
+ * cambia USER_KEY a la que uses.
+ */
+
 const RECEIPT_KEY = "techstore_last_receipt_v1";
 const SALES_KEY = "admin_sales_v1";
-const USER_KEY = "techstore_user_v1"; // si tú guardas el usuario con otra key, dime y lo ajusto
+const USER_KEY = "techstore_user_v1";
 
 export function getCustomerForReceipt() {
+  // Si no hay usuario logueado, se muestra Invitado (no rompe la app).
   try {
     const raw = localStorage.getItem(USER_KEY);
-    if (!raw) {
-      return { name: "Invitado", email: "—", address: "—" };
-    }
+    if (!raw) return { name: "Invitado", email: "—", address: "—" };
     const u = JSON.parse(raw);
     return {
       name: u.name || u.nombre || "Invitado",
@@ -30,8 +41,8 @@ export function computeTotal(items) {
   }, 0);
 }
 
-export function createReceipt({ status, items }) {
-  const customer = getCustomerForReceipt();
+export function createReceipt({ status, items, customerOverride }) {
+  const customer = customerOverride || getCustomerForReceipt();
   const total = computeTotal(items);
 
   return {
@@ -44,6 +55,7 @@ export function createReceipt({ status, items }) {
       name: it.name,
       price: Number(it.price),
       qty: Number(it.qty ?? 1),
+      img: it.img || it.image || "",
     })),
     total,
   };
@@ -51,6 +63,15 @@ export function createReceipt({ status, items }) {
 
 export function saveLastReceipt(receipt) {
   localStorage.setItem(RECEIPT_KEY, JSON.stringify(receipt));
+}
+
+export function getLastReceipt() {
+  const raw = localStorage.getItem(RECEIPT_KEY);
+  return raw ? JSON.parse(raw) : null;
+}
+
+export function clearLastReceipt() {
+  localStorage.removeItem(RECEIPT_KEY);
 }
 
 export function registerSaleIfApproved(receipt) {
@@ -61,12 +82,25 @@ export function registerSaleIfApproved(receipt) {
 
   sales.unshift({
     code: receipt.id,
-    dateISO: receipt.dateISO,
-    customerName: receipt.customer?.name || "Invitado",
-    customerEmail: receipt.customer?.email || "—",
-    total: receipt.total,
-    itemsCount: receipt.items?.length || 0,
     status: receipt.status,
+    dateISO: receipt.dateISO, // ✅ fecha
+
+    customer: {
+      name: receipt.customer?.name || "Invitado",
+      email: receipt.customer?.email || "—",
+      address: receipt.customer?.address || "—",
+    },
+
+    items: (receipt.items || []).map((it) => ({
+      id: it.id,
+      name: it.name,
+      price: Number(it.price),
+      qty: Number(it.qty),
+      subtotal: Number(it.price) * Number(it.qty),
+    })),
+
+    itemsCount: receipt.items?.length || 0,
+    total: Number(receipt.total) || 0,
   });
 
   localStorage.setItem(SALES_KEY, JSON.stringify(sales));

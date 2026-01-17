@@ -1,20 +1,31 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
-import { CATEGORIES} from "../utils/products.js";
+import { CATEGORIES } from "../utils/products.js";
 import { addToCart, formatCLP } from "../utils/cart.js";
-import { useProducts } from "../hooks/useProducts";
+import { useProducts } from "../hooks/useProducts.js";
 
-
-
+/**
+ * Productos
+ * - Carga catálogo desde una "API interna" (public/data/products.json) vía Axios
+ * - Permite filtrar por categoría y buscar por nombre/características
+ * - Agrega productos al carrito (localStorage)
+ */
 export default function Productos() {
+  const [searchParams] = useSearchParams();
+
   const [query, setQuery] = useState("");
   const [categoria, setCategoria] = useState("todos");
   const [added, setAdded] = useState({});
 
-  // ✅ ahora los productos vienen desde JSON vía Axios
   const { products, loading, error } = useProducts();
+
+  // Permite abrir la vista filtrada desde /categorias -> /productos?cat=...
+  useEffect(() => {
+    const cat = searchParams.get("cat");
+    if (cat) setCategoria(cat);
+  }, [searchParams]);
 
   const list = useMemo(() => {
     let items = products;
@@ -28,8 +39,7 @@ export default function Productos() {
       items = items.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
-          (Array.isArray(p.features) &&
-            p.features.some((f) => String(f).toLowerCase().includes(q)))
+          (Array.isArray(p.features) && p.features.some((f) => String(f).toLowerCase().includes(q)))
       );
     }
 
@@ -54,14 +64,8 @@ export default function Productos() {
       </section>
 
       <section className="container my-5">
-        {/* Estados de carga/error */}
-        {loading && (
-          <div className="alert alert-info">Cargando productos...</div>
-        )}
-
-        {error && (
-          <div className="alert alert-danger">{error}</div>
-        )}
+        {loading && <div className="alert alert-info">Cargando productos...</div>}
+        {error && <div className="alert alert-danger">{error}</div>}
 
         {!loading && !error && (
           <>
@@ -92,11 +96,22 @@ export default function Productos() {
                   ))}
                 </select>
               </div>
+
+              <div className="col-md-8 d-flex align-items-end justify-content-md-end mt-3 mt-md-0">
+                <div className="d-flex gap-2 flex-wrap">
+                  <Link to="/categorias" className="btn btn-outline-secondary">
+                    📦 Ver categorías
+                  </Link>
+                  <Link to="/ofertas" className="btn btn-outline-danger">
+                    🔥 Ver ofertas
+                  </Link>
+                </div>
+              </div>
             </div>
 
             <div className="row g-4">
               {list.map((p) => (
-                <div className="col-md-3" key={p.id}>
+                <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={p.id}>
                   <div className="card h-100">
                     {p.id === "mouse1" ? (
                       <Link to="/producto-mouse" className="text-decoration-none text-dark">
@@ -117,10 +132,7 @@ export default function Productos() {
 
                       <p className="fw-bold">{formatCLP(p.price)}</p>
 
-                      <button
-                        className="btn btn-primary w-100"
-                        onClick={() => handleAdd(p)}
-                      >
+                      <button className="btn btn-primary w-100" onClick={() => handleAdd(p)} type="button">
                         Agregar
                       </button>
 
@@ -134,9 +146,7 @@ export default function Productos() {
 
               {list.length === 0 && (
                 <div className="col-12">
-                  <div className="alert alert-warning m-0">
-                    No hay productos para mostrar.
-                  </div>
+                  <div className="alert alert-warning m-0">No hay productos para mostrar.</div>
                 </div>
               )}
             </div>

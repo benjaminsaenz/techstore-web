@@ -70,6 +70,13 @@ export default function NavbarMain() {
                 <Link className="dropdown-item" to="/productos">
                   Productos
                 </Link>
+                <Link className="dropdown-item" to="/categorias">
+                  Categorías
+                </Link>
+                <Link className="dropdown-item" to="/ofertas">
+                  Ofertas
+                </Link>
+                <div className="dropdown-divider" />
                 <Link className="dropdown-item" to="/contacto">
                   Contacto
                 </Link>
