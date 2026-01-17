@@ -12,6 +12,7 @@
     "test:watch": "vitest --watch",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
+    
   },
   "dependencies": {
     "axios": "^1.13.2",

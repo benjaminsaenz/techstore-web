@@ -3,8 +3,9 @@ import { createReceipt, computeTotal, registerSaleIfApproved, saveLastReceipt, g
 
 describe("checkout.js", () => {
   beforeEach(() => {
-    localStorage.clear();
-  });
+  window.localStorage.clear();
+});
+
 
   it("computeTotal ignora precios <= 0", () => {
     const total = computeTotal([

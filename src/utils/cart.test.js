@@ -3,8 +3,8 @@ import { addToCart, clearCart, getCart, cartCount, cartTotal } from "./cart.js";
 
 describe("cart.js", () => {
   beforeEach(() => {
-    localStorage.clear();
-  });
+  window.localStorage.clear();
+});
 
   it("inicia vacío si no hay datos", () => {
     expect(getCart()).toEqual([]);
