@@ -1,0 +1,106 @@
+{
+  "products": [
+    {
+      "id": "teclado1",
+      "name": "Teclado Gamer",
+      "category": "teclado",
+      "price": 39990,
+      "img": "/img/teclado1.jpg",
+      "features": [
+        "Tipo: Mecánico",
+        "Retroiluminación RGB",
+        "Conexión USB"
+      ]
+    },
+    {
+      "id": "mouse1",
+      "name": "Mouse Gamer",
+      "category": "mouse",
+      "price": 19990,
+      "img": "/img/mouse.jpg",
+      "features": [
+        "DPI máximo: 12.000",
+        "Inalámbrico",
+        "Iluminación RGB"
+      ],
+      "onSale": true,
+      "salePercent": 20
+    },
+    {
+      "id": "audifonos1",
+      "name": "Audífonos Gamer",
+      "category": "audifonos",
+      "price": 29990,
+      "img": "/img/audifonos1.jpg",
+      "features": [
+        "Micrófono incorporado",
+        "Sonido envolvente 7.1",
+        "Conexión USB"
+      ]
+    },
+    {
+      "id": "monitor1",
+      "name": "Monitor 24\" Gamer",
+      "category": "monitor",
+      "price": 159990,
+      "img": "/img/monitor.jpg",
+      "features": [
+        "Tamaño: 24 pulgadas",
+        "Resolución: Full HD",
+        "Frecuencia: 144Hz"
+      ]
+    },
+    {
+      "id": "webcam1",
+      "name": "Webcam HD",
+      "category": "webcam",
+      "price": 24990,
+      "img": "/img/webcam1.jpg",
+      "features": [
+        "1080p",
+        "Micrófono",
+        "USB"
+      ]
+    },
+    {
+      "id": "ssd1",
+      "name": "SSD NVMe 500GB",
+      "category": "ssd",
+      "price": 49990,
+      "img": "/img/ssd1.jpg",
+      "features": [
+        "500GB",
+        "NVMe",
+        "Alta velocidad"
+      ],
+      "onSale": true,
+      "salePercent": 15
+    },
+    {
+      "id": "silla2",
+      "name": "Silla Gamer",
+      "category": "silla",
+      "price": 129990,
+      "img": "/img/silla2.jpg",
+      "features": [
+        "Ergonómica",
+        "Reclinable",
+        "Ajustable"
+      ]
+    },
+    {
+      "id": "parlantes1",
+      "name": "Parlantes RGB",
+      "category": "parlantes",
+      "price": 34990,
+      "img": "/img/parlantes1.webp",
+      "features": [
+        "Estéreo",
+        "RGB",
+        "USB"
+      ],
+      "onSale": true,
+      "salePercent": 10
+    }
+  ]
+}
