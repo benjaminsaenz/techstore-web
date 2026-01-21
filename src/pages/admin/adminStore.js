@@ -6,8 +6,27 @@ const LS_KEYS = {
   sales: "admin_sales_v1",
 };
 
+function safeParse(raw, fallback) {
+  try {
+    const v = raw ? JSON.parse(raw) : fallback;
+    return v ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function ensureArrayKey(key, fallbackArray) {
+  const raw = localStorage.getItem(key);
+  const parsed = safeParse(raw, null);
+  if (!Array.isArray(parsed)) {
+    localStorage.setItem(key, JSON.stringify(fallbackArray));
+    return fallbackArray;
+  }
+  return parsed;
+}
+
 export function seedIfEmpty() {
-  // Seed productos basado en tu catálogo actual (utils/products.js)
+  // ✅ Productos por defecto basados en tu catálogo real (utils/products.js)
   const defaultProducts = (PRODUCTS || []).map((p, idx) => ({
     code: `P${String(idx + 1).padStart(3, "0")}`,
     id: p.id,
@@ -15,7 +34,7 @@ export function seedIfEmpty() {
     category: p.category,
     price: p.price,
     stock: 10 + idx,
-    image: p.img, // debe venir como "/img/..."
+    image: p.img, // "/img/..."
     detail: (p.features || []).slice(0, 2).join(" • "),
   }));
 
@@ -42,34 +61,25 @@ export function seedIfEmpty() {
     },
   ];
 
-  // ✅ PRODUCTS: si no existe O existe pero está vacío -> sembrar
-  const currentProductsRaw = localStorage.getItem(LS_KEYS.products);
-  const currentProducts = currentProductsRaw ? JSON.parse(currentProductsRaw) : null;
-
-  if (!Array.isArray(currentProducts) || currentProducts.length === 0) {
+  // ✅ Products: si no existe o está vacío, sembrar catálogo
+  const productsArr = ensureArrayKey(LS_KEYS.products, []);
+  if (productsArr.length === 0) {
     localStorage.setItem(LS_KEYS.products, JSON.stringify(defaultProducts));
   }
 
-  // Clients: si no existe o está vacío, sembrar clientes demo
-  const currentClientsRaw = localStorage.getItem(LS_KEYS.clients);
-  const currentClients = currentClientsRaw ? JSON.parse(currentClientsRaw) : null;
-
-  if (!Array.isArray(currentClients) || currentClients.length === 0) {
+  // ✅ Clients: si no existe o está vacío, sembrar clientes demo
+  const clientsArr = ensureArrayKey(LS_KEYS.clients, []);
+  if (clientsArr.length === 0) {
     localStorage.setItem(LS_KEYS.clients, JSON.stringify(defaultClients));
   }
 
-  // Sales: si no existe, crear vacío
-  const currentSalesRaw = localStorage.getItem(LS_KEYS.sales);
-  const currentSales = currentSalesRaw ? JSON.parse(currentSalesRaw) : null;
-
-  if (!Array.isArray(currentSales)) {
-    localStorage.setItem(LS_KEYS.sales, JSON.stringify([]));
-  }
+  // ✅ Sales: JAMÁS borrar ventas existentes
+  // Si no existe o está corrupto, se crea como array vacío.
+  ensureArrayKey(LS_KEYS.sales, []);
 }
 
 function read(key) {
-  const raw = localStorage.getItem(key);
-  return raw ? JSON.parse(raw) : [];
+  return ensureArrayKey(key, []);
 }
 
 function write(key, value) {
@@ -80,7 +90,6 @@ function write(key, value) {
 export function getProducts() {
   return read(LS_KEYS.products);
 }
-
 export function saveProducts(products) {
   write(LS_KEYS.products, products);
 }
@@ -89,7 +98,6 @@ export function saveProducts(products) {
 export function getClients() {
   return read(LS_KEYS.clients);
 }
-
 export function saveClients(clients) {
   write(LS_KEYS.clients, clients);
 }
@@ -98,11 +106,9 @@ export function saveClients(clients) {
 export function getSales() {
   return read(LS_KEYS.sales);
 }
-
 export function saveSales(sales) {
   write(LS_KEYS.sales, sales);
 }
-
 export function addSale(sale) {
   const sales = getSales();
   sales.unshift(sale);

@@ -1,5 +1,19 @@
 const KEY = "techstore_cart_v1";
 
+// Emit a small global event so UI (Navbar badge, etc.) can react immediately
+// when the cart changes, without needing a route change.
+function notifyCartUpdated() {
+  try {
+    window.dispatchEvent(
+      new CustomEvent("techstore:cart", {
+        detail: { count: cartCount() },
+      })
+    );
+  } catch {
+    // no-op (tests / non-browser env)
+  }
+}
+
 export function getCart() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -12,6 +26,7 @@ export function getCart() {
 
 export function saveCart(items) {
   localStorage.setItem(KEY, JSON.stringify(items));
+  notifyCartUpdated();
 }
 
 export function addToCart(product) {

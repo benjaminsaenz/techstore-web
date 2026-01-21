@@ -17,7 +17,8 @@ export default function PagoError() {
       <main className="container my-5">
         <div className="alert alert-danger">
           <h4 className="m-0">❌ No se pudo realizar el pago</h4>
-          <div className="small">Simulación de error: tu carrito no fue vaciado.</div>
+          <div className="small">Simulación: el carrito no fue vaciado para que puedas reintentar.</div>
+          {receipt?.reason && <div className="small mt-1">Motivo: <strong>{receipt.reason}</strong></div>}
         </div>
 
         {!receipt ? (

@@ -14,6 +14,28 @@ const RECEIPT_KEY = "techstore_last_receipt_v1";
 const SALES_KEY = "admin_sales_v1";
 const USER_KEY = "techstore_user_v1";
 
+function readSalesSafe() {
+  try {
+    const raw = localStorage.getItem(SALES_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function nextSaleId(sales) {
+  const nums = (sales || [])
+    .map((s) => String(s.saleId || s.code || ""))
+    .map((id) => {
+      const m = id.match(/VEN-(\d+)/i);
+      return m ? parseInt(m[1], 10) : NaN;
+    })
+    .filter((n) => Number.isFinite(n));
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return `VEN-${String(next).padStart(4, "0")}`;
+}
+
 export function getCustomerForReceipt() {
   // Si no hay usuario logueado, se muestra Invitado (no rompe la app).
   try {
@@ -74,16 +96,40 @@ export function clearLastReceipt() {
   localStorage.removeItem(RECEIPT_KEY);
 }
 
-export function registerSaleIfApproved(receipt) {
-  if (!receipt || receipt.status !== "APROBADA") return;
+// Guarda la venta en el panel admin (APROBADA o RECHAZADA)
+export function registerSale(receipt) {
+  if (!receipt) return;
 
-  const raw = localStorage.getItem(SALES_KEY);
-  const sales = raw ? JSON.parse(raw) : [];
+  // ✅ Permite más estados (admin puede editar después)
+  const status = String(receipt.status || "PENDIENTE").toUpperCase();
+
+  const sales = readSalesSafe();
+  const saleId = nextSaleId(sales);
+
+  const items = (receipt.items || []).map((it) => {
+    const price = Number(it.price);
+    const qty = Number(it.qty ?? 1);
+    return {
+      id: it.id,
+      name: it.name,
+      price,
+      qty,
+      subtotal: Number.isFinite(price) && Number.isFinite(qty) ? price * qty : 0,
+    };
+  });
 
   sales.unshift({
-    code: receipt.id,
-    status: receipt.status,
-    dateISO: receipt.dateISO, // ✅ fecha
+    // ID "bonito" para el panel admin
+    saleId, // VEN-0001
+    code: saleId, // backward-compat
+
+    // Referencia a la boleta
+    receiptId: receipt.id,
+
+    status, // APROBADA | RECHAZADA | PENDIENTE | ERROR PAGO | etc.
+    dateISO: receipt.dateISO || new Date().toISOString(),
+
+    reason: receipt.reason || "",
 
     customer: {
       name: receipt.customer?.name || "Invitado",
@@ -91,17 +137,19 @@ export function registerSaleIfApproved(receipt) {
       address: receipt.customer?.address || "—",
     },
 
-    items: (receipt.items || []).map((it) => ({
-      id: it.id,
-      name: it.name,
-      price: Number(it.price),
-      qty: Number(it.qty),
-      subtotal: Number(it.price) * Number(it.qty),
-    })),
-
-    itemsCount: receipt.items?.length || 0,
+    items,
+    itemsCount: items.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
     total: Number(receipt.total) || 0,
   });
 
   localStorage.setItem(SALES_KEY, JSON.stringify(sales));
+
+  // Notifica a la UI (mismo tab) que hubo cambios en ventas
+  try { window.dispatchEvent(new Event("techstore:sales")); } catch {}
+}
+
+// Backward-compat (por si algún archivo antiguo lo está usando)
+export function registerSaleIfApproved(receipt) {
+  if (!receipt || receipt.status !== "APROBADA") return;
+  registerSale(receipt);
 }

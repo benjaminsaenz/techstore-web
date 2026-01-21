@@ -5,6 +5,40 @@ body {
     background-color: #f8f9fa;
 }
 
+/* ================================
+   MICRO-ANIMACIONES ("más vida")
+================================ */
+.ts-fade-up {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: tsFadeUp 700ms ease forwards;
+}
+
+.ts-delay-1 { animation-delay: 120ms; }
+.ts-delay-2 { animation-delay: 240ms; }
+
+@keyframes tsFadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Pequeño "pop" para CTA */
+.ts-btn-pop {
+    transition: transform 200ms ease, box-shadow 200ms ease;
+}
+.ts-btn-pop:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+
+/* Más "respiración" en secciones */
+.ts-section {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+}
+
 /* Imágenes dentro de cards */
 .card img {
     height: 180px;
@@ -151,6 +185,36 @@ table img {
 .card:hover {
     transform: translateY(-6px);
     box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+
+/* =============================
+   BENEFICIOS (Home)
+   Imagen: public/img/fondobeneficios.jpg
+================================ */
+.ts-beneficios {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background-image: url("/img/fondobeneficios.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.ts-beneficios::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* overlay para que se lea el texto */
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.ts-beneficios > .container {
+  position: relative;
+  z-index: 1;
+}
+
+.ts-beneficios i {
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
 }
 
 

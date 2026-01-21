@@ -12,7 +12,10 @@ export default function NavbarAdmin() {
   return (
     <nav className="navbar navbar-dark bg-dark">
       <div className="container-fluid">
-        <span className="navbar-brand">Panel Administrador - TechStore</span>
+        <span className="navbar-brand fw-bold">
+          <span className="me-2">TechStore</span>
+          <span className="badge bg-light text-dark border border-warning">Panel de admin</span>
+        </span>
         <div className="d-flex gap-2">
           <Link to="/" className="btn btn-outline-light btn-sm">
             Ir a la tienda

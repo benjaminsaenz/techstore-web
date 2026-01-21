@@ -1,9 +1,17 @@
 import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import { validarRutFormato, validarRutModulo11 } from "../utils/rut.js";
+import { registerUser } from "../utils/auth.js";
 
 export default function Registro() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const redirect = params.get("redirect") || "/";
+
   const [form, setForm] = useState({
+    nombre: "",
     correo: "",
     password: "",
     rut: "",
@@ -22,6 +30,7 @@ export default function Registro() {
     e.preventDefault();
 
     const errors = {};
+    const nombre = form.nombre.trim();
     const correo = form.correo.trim();
     const password = form.password.trim();
     const rut = form.rut.trim();
@@ -29,6 +38,7 @@ export default function Registro() {
     const ciudad = form.ciudad;
     const direccion = form.direccion.trim();
 
+    if (nombre.length < 3) errors.nombre = "Nombre muy corto";
     if (!correo) errors.correo = "El correo es obligatorio";
     if (password.length < 6) errors.password = "Mínimo 6 caracteres";
 
@@ -51,17 +61,29 @@ export default function Registro() {
       return;
     }
 
-    setMsgFinal("Registro completado correctamente ✔");
-    setForm({
-      correo: "",
-      password: "",
-      rut: "",
-      telefono: "",
-      ciudad: "",
-      region: "",
-      comuna: "",
-      direccion: "",
+    const result = registerUser({
+      name: nombre,
+      email: correo,
+      password,
+      rut,
+      phone: telefono,
+      city: form.ciudad,
+      region: form.region,
+      comuna: form.comuna,
+      address: direccion,
     });
+
+    if (!result.ok) {
+      setMsgFinal("");
+      return alert(result.error);
+    }
+
+    setMsgFinal("Registro completado correctamente ✔");
+
+    // Si venías del checkout, vuelve ahí automáticamente
+    setTimeout(() => {
+      navigate(redirect, { replace: true });
+    }, 400);
   };
 
   return (
@@ -73,6 +95,12 @@ export default function Registro() {
           <h2 className="mb-4 text-center text-white">Crear cuenta</h2>
 
           <form onSubmit={validarFormulario} noValidate>
+            <div className="mb-3">
+              <label className="text-white">Nombre</label>
+              <input type="text" className="form-control" value={form.nombre} onChange={setField("nombre")} />
+              <small className="text-danger">{err.nombre || ""}</small>
+            </div>
+
             <div className="mb-3">
               <label className="text-white">Correo electrónico</label>
               <input type="email" className="form-control" value={form.correo} onChange={setField("correo")} />
@@ -152,6 +180,13 @@ export default function Registro() {
             <button type="submit" className="btn btn-primary w-100">
               Registrarse
             </button>
+
+            <div className="text-center mt-3">
+              <span className="text-white-50">¿Ya tienes cuenta? </span>
+              <Link to="/login" className="link-light fw-semibold">
+                Inicia sesión
+              </Link>
+            </div>
 
             <p className={`mt-3 fw-bold text-center ${msgFinal ? "text-success" : ""}`}>{msgFinal}</p>
           </form>

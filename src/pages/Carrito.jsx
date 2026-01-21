@@ -2,19 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
-import { clearCart, formatCLP, getCart, saveCart } from "../utils/cart.js";
-import { createReceipt, registerSaleIfApproved, saveLastReceipt } from "../utils/checkout.js";
+import { formatCLP, getCart, saveCart } from "../utils/cart.js";
 
 /**
  * Carrito
  * - Muestra productos agregados y permite modificar cantidad/eliminar
- * - Botones simulación de pago: APROBADA/RECHAZADA
- * - Para flujo "más completo", también existe la ruta /checkout
+ * - ✅ Limpieza: SOLO botón Checkout (las opciones APROBADA/RECHAZADA viven en /checkout)
  */
 export default function Carrito() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-  const [payError, setPayError] = useState("");
 
   useEffect(() => {
     setItems(getCart());
@@ -39,30 +36,8 @@ export default function Carrito() {
     [items]
   );
 
-  const payApproved = () => {
-    setPayError("");
-    if (!items.length) return setPayError("No hay productos en el carrito.");
-    if (total <= 0) return setPayError("El total no puede ser 0 o negativo.");
-
-    const receipt = createReceipt({ status: "APROBADA", items });
-    saveLastReceipt(receipt);
-    registerSaleIfApproved(receipt);
-
-    clearCart();
-    setItems([]);
-
-    navigate("/pago-exitoso");
-  };
-
-  const payRejected = () => {
-    setPayError("❌ No se realizó el pago. Intenta nuevamente o usa otro medio.");
-
-    if (!items.length) return;
-
-    const receipt = createReceipt({ status: "RECHAZADA", items });
-    saveLastReceipt(receipt);
-
-    navigate("/pago-error");
+  const goCheckout = () => {
+    navigate("/checkout");
   };
 
   return (
@@ -94,7 +69,7 @@ export default function Carrito() {
                   {items.map((it) => (
                     <tr key={it.id}>
                       <td>
-                        <img src={it.img} width="70" alt={it.name} style={{ objectFit: "cover" }} />
+                        <img src={it.img} width="70" alt={it.name} />
                       </td>
                       <td>{it.name}</td>
                       <td>{formatCLP(it.price)}</td>
@@ -133,29 +108,18 @@ export default function Carrito() {
               </table>
             </div>
 
-            <div className="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-3">
+            <div className="d-flex justify-content-between align-items-center mt-4">
               <Link to="/productos" className="btn btn-secondary">
                 ⬅ Seguir comprando
               </Link>
 
               <div className="text-end">
                 <p className="fw-bold fs-5 mb-2">Total: {formatCLP(total)}</p>
-
-                <div className="d-flex gap-2 justify-content-end flex-wrap">
-                  <Link to="/checkout" className="btn btn-outline-dark">
-                    Ir a Checkout
-                  </Link>
-                  <button className="btn btn-success" onClick={payApproved} type="button">
-                    ✅ Compra aprobada
-                  </button>
-                  <button className="btn btn-danger" onClick={payRejected} type="button">
-                    ❌ Pago rechazado
-                  </button>
-                </div>
+                <button className="btn btn-success" onClick={goCheckout} type="button">
+                  Checkout
+                </button>
               </div>
             </div>
-
-            {payError && <div className="alert alert-danger mt-3 mb-0">{payError}</div>}
           </>
         )}
       </main>

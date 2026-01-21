@@ -66,17 +66,5 @@ describe("<Carrito />", () => {
     expect(screen.getByText(/Total:/i)).toBeInTheDocument();
   });
 
-  it("al hacer click en compra aprobada navega a /pago-exitoso", () => {
-    getCart.mockReturnValueOnce([{ id: "p1", name: "A", price: 100, qty: 1, img: "/img/a.jpg" }]);
 
-    render(
-      <MemoryRouter>
-        <Carrito />
-      </MemoryRouter>
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: /Compra aprobada/i }));
-    expect(clearCart).toHaveBeenCalled();
-    expect(navigateMock).toHaveBeenCalledWith("/pago-exitoso");
-  });
 });

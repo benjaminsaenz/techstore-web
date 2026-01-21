@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
 import { PRODUCTS } from "../utils/products.js";
@@ -22,9 +23,18 @@ export default function Home() {
       <NavbarMain />
 
       <header className="hero text-white text-center d-flex align-items-center">
-        <div className="container">
-          <h1 className="fw-bold">Bienvenido a TechStore</h1>
-          <p className="lead">Accesorios tecnológicos al mejor precio</p>
+        <div className="container ts-hero-content">
+          <h1 className="fw-bold ts-fade-up">Bienvenido a TechStore</h1>
+          <p className="lead ts-fade-up ts-delay-1">Accesorios tecnológicos al mejor precio</p>
+
+          <div className="d-flex justify-content-center gap-2 flex-wrap mt-3 ts-fade-up ts-delay-2">
+            <Link to="/productos" className="btn btn-primary btn-lg ts-btn-pop">
+              Ver productos
+            </Link>
+            <Link to="/contacto" className="btn btn-outline-light btn-lg">
+              Contacto
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -66,30 +76,33 @@ export default function Home() {
         </button>
       </div>
 
-      <section className="container my-5">
-        <div className="row text-center">
+      {/* Beneficios (con fondo en CSS) */}
+      <section className="ts-beneficios my-5">
+        <div className="container py-5">
+          <div className="row text-center text-white">
           <div className="col-md-4">
-            <i className="fa-solid fa-truck-fast fs-1 text-primary mb-3" />
-            <h5>Despacho rápido</h5>
-            <p>Entregas a todo Chile</p>
+            <i className="fa-solid fa-truck-fast fs-1 mb-3" />
+            <h5 className="fw-bold">Despacho rápido</h5>
+            <p className="mb-0">Entregas a todo Chile</p>
           </div>
 
           <div className="col-md-4">
-            <i className="fa-solid fa-shield-halved fs-1 text-primary mb-3" />
-            <h5>Compra segura</h5>
-            <p>Protegemos tus datos</p>
+            <i className="fa-solid fa-shield-halved fs-1 mb-3" />
+            <h5 className="fw-bold">Compra segura</h5>
+            <p className="mb-0">Protegemos tus datos</p>
           </div>
 
           <div className="col-md-4">
-            <i className="fa-solid fa-headset fs-1 text-primary mb-3" />
-            <h5>Soporte 24/7</h5>
-            <p>Atención personalizada</p>
+            <i className="fa-solid fa-headset fs-1 mb-3" />
+            <h5 className="fw-bold">Soporte 24/7</h5>
+            <p className="mb-0">Atención personalizada</p>
+          </div>
           </div>
         </div>
       </section>
 
-      <section className="container my-5">
-        <h2 className="text-center mb-4">Productos Destacados</h2>
+      <section className="container my-5 ts-section">
+        <h2 className="text-center mb-4 ts-fade-up">Productos Destacados</h2>
 
         <div className="row g-4">
           {destacados.map((p) => (

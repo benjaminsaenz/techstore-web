@@ -1,89 +1,92 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
-import { getCart, clearCart, saveCart, formatCLP } from "../utils/cart.js";
-import { createReceipt, saveLastReceipt, registerSaleIfApproved } from "../utils/checkout.js";
+import { getCart, clearCart, formatCLP } from "../utils/cart.js";
+import { createReceipt, saveLastReceipt, registerSale } from "../utils/checkout.js";
+import { getCurrentUser } from "../utils/auth.js";
 
 /**
- * Checkout
- * - Paso intermedio (sin backend): el usuario ingresa datos de envío
- * - Botones de simulación: pago aprobado / pago rechazado
- * - Genera boleta y redirige a páginas de resultado.
+ * Checkout (Resumen)
+ * Flujo:
+ * 1) Si no hay usuario logueado => manda a /registro (crear cuenta)
+ * 2) Luego vuelve a /checkout y muestra:
+ *    - Datos del cliente
+ *    - Resumen de compra
+ *    - Botones: Compra aprobada / Compra rechazada
  */
 export default function Checkout() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
-
-  // Datos del cliente (simulados)
-  const [customer, setCustomer] = useState({
-    name: "",
-    email: "",
-    address: "",
-  });
-
   const [error, setError] = useState("");
+  const user = getCurrentUser();
 
   useEffect(() => {
+    // ✅ requisito: al entrar a checkout, primero crear cuenta
+    if (!user) {
+      navigate(`/registro?redirect=${encodeURIComponent("/checkout")}`, { replace: true });
+      return;
+    }
     setItems(getCart());
-  }, []);
+  }, [navigate]);
 
   const total = useMemo(
     () => items.reduce((acc, it) => acc + Number(it.price) * Number(it.qty || 1), 0),
     [items]
   );
 
-  const updateCustomer = (key, value) => {
-    setCustomer((c) => ({ ...c, [key]: value }));
-  };
-
   const validate = () => {
+    if (!user) return "Debes crear cuenta para continuar.";
     if (!items.length) return "No hay productos en el carrito.";
     if (total <= 0) return "El total no puede ser 0 o negativo.";
-    if (customer.name.trim().length < 3) return "Nombre muy corto.";
-    if (!customer.email.includes("@")) return "Correo inválido.";
-    if (customer.address.trim().length < 5) return "Dirección muy corta.";
     return "";
   };
 
-  const payApproved = () => {
+  const approve = () => {
     const msg = validate();
-    if (msg) {
-      setError(msg);
-      return;
-    }
+    if (msg) return setError(msg);
 
     const receipt = createReceipt({
       status: "APROBADA",
       items,
-      customerOverride: customer,
+      customerOverride: {
+        name: user.name,
+        email: user.email,
+        address: user.address,
+      },
     });
 
     saveLastReceipt(receipt);
-    registerSaleIfApproved(receipt);
+    registerSale(receipt);
 
-    // Vaciar carrito si fue aprobada
+    // ✅ Aprobada: vacía carrito
     clearCart();
     setItems([]);
-    saveCart([]);
 
     navigate("/pago-exitoso");
   };
 
-  const payRejected = () => {
+  const reject = () => {
     const msg = validate();
-    if (msg) {
-      setError(msg);
-      return;
-    }
+    if (msg) return setError(msg);
 
     const receipt = createReceipt({
       status: "RECHAZADA",
       items,
-      customerOverride: customer,
+      customerOverride: {
+        name: user.name,
+        email: user.email,
+        address: user.address,
+      },
     });
 
+    // Motivo más “profesional” (simulado)
+    receipt.reason = "Pago rechazado: fondos insuficientes o medio no válido.";
+
+    // ✅ Rechazada: guarda boleta y registra venta RECHAZADA, pero no borra carrito
     saveLastReceipt(receipt);
+    registerSale(receipt);
+
     navigate("/pago-error");
   };
 
@@ -94,11 +97,13 @@ export default function Checkout() {
       <main className="container my-5">
         <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
           <h2 className="m-0">🧾 Checkout</h2>
-          <span className="text-muted">(simulación sin backend)</span>
+          <span className="text-muted">(resumen)</span>
           <Link to="/carrito" className="btn btn-sm btn-outline-secondary ms-auto">
             ⬅ Volver al carrito
           </Link>
         </div>
+
+        {error && <div className="alert alert-danger">{error}</div>}
 
         {items.length === 0 ? (
           <div className="alert alert-info">
@@ -106,74 +111,66 @@ export default function Checkout() {
           </div>
         ) : (
           <div className="row g-4">
-            {/* Formulario */}
-            <div className="col-12 col-lg-7">
+            {/* Datos cliente */}
+            <div className="col-12 col-lg-5">
               <div className="card">
                 <div className="card-body">
-                  <h5 className="card-title">Datos del cliente / envío</h5>
+                  <h5 className="card-title">Datos del cliente</h5>
+                  <div className="small text-muted">(recien registrado / sesión activa)</div>
 
-                  {error && <div className="alert alert-danger">{error}</div>}
+                  <hr />
 
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Nombre</label>
-                      <input
-                        className="form-control"
-                        value={customer.name}
-                        onChange={(e) => updateCustomer("name", e.target.value)}
-                        placeholder="Ej: Juan Pérez"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-bold">Correo</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        value={customer.email}
-                        onChange={(e) => updateCustomer("email", e.target.value)}
-                        placeholder="cliente@email.com"
-                      />
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label fw-bold">Dirección</label>
-                      <input
-                        className="form-control"
-                        value={customer.address}
-                        onChange={(e) => updateCustomer("address", e.target.value)}
-                        placeholder="Calle 123, comuna, ciudad"
-                      />
-                    </div>
+                  <div className="mb-2">
+                    <div className="text-muted small">Nombre</div>
+                    <div className="fw-bold">{user?.name}</div>
+                  </div>
+                  <div className="mb-2">
+                    <div className="text-muted small">Correo</div>
+                    <div className="fw-bold">{user?.email}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted small">Dirección</div>
+                    <div className="fw-bold">{user?.address}</div>
                   </div>
 
                   <div className="d-flex gap-2 flex-wrap mt-4">
-                    <button className="btn btn-success" type="button" onClick={payApproved}>
-                      ✅ Pagar (Aprobado)
+                    <button className="btn btn-success" type="button" onClick={approve}>
+                      ✅ Compra aprobada
                     </button>
-                    <button className="btn btn-danger" type="button" onClick={payRejected}>
-                      ❌ Pagar (Rechazado)
+                    <button className="btn btn-danger" type="button" onClick={reject}>
+                      ❌ Compra rechazada
                     </button>
                   </div>
 
                   <p className="small text-muted mt-3 mb-0">
-                    Nota: esto es una simulación. La boleta se guarda en localStorage.
+                    Nota: simulación sin backend. La boleta y las ventas se guardan en localStorage.
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Resumen */}
-            <div className="col-12 col-lg-5">
+            <div className="col-12 col-lg-7">
               <div className="card">
                 <div className="card-body">
-                  <h5 className="card-title">Resumen</h5>
+                  <h5 className="card-title">Resumen de compra</h5>
 
                   <ul className="list-group list-group-flush">
                     {items.map((it) => (
                       <li key={it.id} className="list-group-item d-flex align-items-center gap-2">
-                        <img src={it.img} alt={it.name} width="48" height="48" style={{ objectFit: "cover" }} className="rounded border" />
+                        <img
+                          src={it.img}
+                          alt={it.name}
+                          width="48"
+                          height="48"
+                          style={{ objectFit: "cover" }}
+                          className="rounded border"
+                        />
                         <div className="flex-grow-1">
                           <div className="fw-bold">{it.name}</div>
-                          <div className="small text-muted">{it.qty} x {formatCLP(it.price)}</div>
+                          <div className="small text-muted">
+                            {it.qty} x {formatCLP(it.price)}
+                          </div>
                         </div>
                         <div className="fw-bold">{formatCLP(it.price * (it.qty || 1))}</div>
                       </li>
