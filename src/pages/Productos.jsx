@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { gsap } from "gsap";
 import { Link, useSearchParams } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
@@ -13,6 +14,7 @@ import { useProducts } from "../hooks/useProducts.js";
  * - Agrega productos al carrito (localStorage)
  */
 export default function Productos() {
+  const rootRef = useRef(null);
   const [searchParams] = useSearchParams();
 
   const [query, setQuery] = useState("");
@@ -26,6 +28,35 @@ export default function Productos() {
     const cat = searchParams.get("cat");
     if (cat) setCategoria(cat);
   }, [searchParams]);
+
+  // ✅ Animaciones suaves al entrar a la página (solo cuando ya cargó el catálogo)
+  useLayoutEffect(() => {
+    if (loading || error) return;
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+
+      tl.from(".ts-productos-hero .container > *", {
+        opacity: 0,
+        y: 22,
+        duration: 0.7,
+        stagger: 0.12,
+      });
+
+      tl.from(
+        ".ts-productos-grid .card",
+        {
+          opacity: 0,
+          y: 18,
+          duration: 0.55,
+          stagger: 0.06,
+        },
+        "-=0.25"
+      );
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, [loading, error]);
 
   const list = useMemo(() => {
     let items = products;
@@ -46,17 +77,27 @@ export default function Productos() {
     return items;
   }, [products, categoria, query]);
 
-  const handleAdd = (p) => {
+  const handleAdd = (p, evt) => {
+    if (evt?.currentTarget) {
+      gsap.fromTo(
+        evt.currentTarget,
+        { scale: 1 },
+        { scale: 1.12, duration: 0.18, yoyo: true, repeat: 1, ease: "power1.out" }
+      );
+    }
     addToCart(p);
     setAdded((prev) => ({ ...prev, [p.id]: true }));
     setTimeout(() => setAdded((prev) => ({ ...prev, [p.id]: false })), 2000);
   };
 
+ 
+
   return (
     <>
       <NavbarMain />
 
-      <section className="hero-productos text-white d-flex align-items-center">
+      <div ref={rootRef}>
+      <section className="hero-productos text-white d-flex align-items-center ts-productos-hero">
         <div className="container text-center">
           <h1 className="fw-bold">Nuestros Productos</h1>
           <p>Accesorios tecnológicos para todos</p>
@@ -109,7 +150,7 @@ export default function Productos() {
               </div>
             </div>
 
-            <div className="row g-4">
+        <div className="row g-4 ts-productos-grid">
               {list.map((p) => (
                 <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={p.id}>
                   <div className="card h-100">
@@ -132,7 +173,7 @@ export default function Productos() {
 
                       <p className="fw-bold">{formatCLP(p.price)}</p>
 
-                      <button className="btn btn-primary w-100" onClick={() => handleAdd(p)} type="button">
+                      <button className="btn btn-primary w-100" onClick={(e) => handleAdd(p, e)} type="button">
                         Agregar
                       </button>
 
@@ -154,6 +195,7 @@ export default function Productos() {
         )}
       </section>
 
+      </div>
       <Footer />
     </>
   );

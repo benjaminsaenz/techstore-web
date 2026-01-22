@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { gsap } from "gsap";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer.jsx";
 import NavbarMain from "../components/NavbarMain.jsx";
@@ -20,7 +21,14 @@ export default function ProductoMouse() {
 
   if (!product) return null;
 
-  const handleAdd = () => {
+  const handleAdd = (evt) => {
+    if (evt?.currentTarget) {
+      gsap.fromTo(
+        evt.currentTarget,
+        { scale: 1 },
+        { scale: 1.06, duration: 0.12, yoyo: true, repeat: 1, ease: "power1.out" }
+      );
+    }
     addToCart(product);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -123,7 +131,7 @@ export default function ProductoMouse() {
                     Comprar ahora
                   </button>
 
-                  <button type="button" className="btn btn-primary btn-lg" onClick={handleAdd}>
+                  <button type="button" className="btn btn-primary btn-lg" onClick={(e) => handleAdd(e)}>
                     Añadir al carrito
                   </button>
 

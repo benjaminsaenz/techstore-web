@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { gsap } from "gsap";
 import { Link } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
@@ -7,8 +8,17 @@ import { addToCart, formatCLP } from "../utils/cart.js";
 
 export default function Home() {
   const [added, setAdded] = useState({});
+  const rootRef = useRef(null);
 
-  const handleAdd = (product) => {
+  const handleAdd = (product, evt) => {
+    // Animación sutil en el botón (feedback inmediato)
+    if (evt?.currentTarget) {
+      gsap.fromTo(
+        evt.currentTarget,
+        { scale: 1 },
+        { scale: 1.06, duration: 0.12, yoyo: true, repeat: 1, ease: "power1.out" }
+      );
+    }
     addToCart(product);
     setAdded((prev) => ({ ...prev, [product.id]: true }));
     setTimeout(() => {
@@ -18,9 +28,53 @@ export default function Home() {
 
   const destacados = PRODUCTS.filter((p) => ["teclado1", "mouse1", "audifonos1", "monitor1"].includes(p.id));
 
+  // ✅ useLayoutEffect = animación visible desde el primer render
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      // Timeline para que sea MÁS notorio (sin exagerar)
+      const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
+
+      // Hero
+      tl.from(".ts-hero-content > *", {
+        opacity: 0,
+        y: 24,
+        duration: 0.75,
+        stagger: 0.12,
+      });
+
+      // Beneficios
+      tl.from(
+        ".ts-beneficios .ts-beneficio-item",
+        {
+          opacity: 0,
+          y: 20,
+          duration: 0.6,
+          stagger: 0.12,
+        },
+        "-=0.25"
+      );
+
+      // Destacados
+      tl.from(
+        ".ts-destacados .card",
+        {
+          opacity: 0,
+          y: 22,
+          duration: 0.65,
+          stagger: 0.1,
+        },
+        "-=0.2"
+      );
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, []);
+
+
   return (
     <>
       <NavbarMain />
+      <div ref={rootRef}>
 
       <header className="hero text-white text-center d-flex align-items-center">
         <div className="container ts-hero-content">
@@ -80,19 +134,19 @@ export default function Home() {
       <section className="ts-beneficios my-5">
         <div className="container py-5">
           <div className="row text-center text-white">
-          <div className="col-md-4">
+          <div className="col-md-4 ts-beneficio-item">
             <i className="fa-solid fa-truck-fast fs-1 mb-3" />
             <h5 className="fw-bold">Despacho rápido</h5>
             <p className="mb-0">Entregas a todo Chile</p>
           </div>
 
-          <div className="col-md-4">
+          <div className="col-md-4 ts-beneficio-item">
             <i className="fa-solid fa-shield-halved fs-1 mb-3" />
             <h5 className="fw-bold">Compra segura</h5>
             <p className="mb-0">Protegemos tus datos</p>
           </div>
 
-          <div className="col-md-4">
+          <div className="col-md-4 ts-beneficio-item">
             <i className="fa-solid fa-headset fs-1 mb-3" />
             <h5 className="fw-bold">Soporte 24/7</h5>
             <p className="mb-0">Atención personalizada</p>
@@ -101,7 +155,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container my-5 ts-section">
+      <section className="container my-5 ts-section ts-destacados">
         <h2 className="text-center mb-4 ts-fade-up">Productos Destacados</h2>
 
         <div className="row g-4">
@@ -120,7 +174,7 @@ export default function Home() {
 
                   <p className="fw-bold">{formatCLP(p.price)}</p>
 
-                  <button className="btn btn-primary w-100" onClick={() => handleAdd(p)}>
+                  <button className="btn btn-primary w-100" onClick={(e) => handleAdd(p, e)}>
                     Agregar
                   </button>
 
@@ -135,6 +189,7 @@ export default function Home() {
       </section>
 
       <Footer />
+      </div>
     </>
   );
 }

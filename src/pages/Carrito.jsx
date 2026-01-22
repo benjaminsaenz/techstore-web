@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { gsap } from "gsap";
 import { Link, useNavigate } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
@@ -36,7 +37,14 @@ export default function Carrito() {
     [items]
   );
 
-  const goCheckout = () => {
+  const goCheckout = (evt) => {
+    if (evt?.currentTarget) {
+      gsap.fromTo(
+        evt.currentTarget,
+        { scale: 1 },
+        { scale: 1.08, duration: 0.16, yoyo: true, repeat: 1, ease: "power2.out" }
+      );
+    }
     navigate("/checkout");
   };
 
@@ -115,7 +123,7 @@ export default function Carrito() {
 
               <div className="text-end">
                 <p className="fw-bold fs-5 mb-2">Total: {formatCLP(total)}</p>
-                <button className="btn btn-success" onClick={goCheckout} type="button">
+                <button className="btn btn-success" onClick={(e) => goCheckout(e)} type="button">
                   Checkout
                 </button>
               </div>
