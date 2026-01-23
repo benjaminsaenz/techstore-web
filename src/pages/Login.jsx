@@ -73,7 +73,6 @@ export default function Login() {
                 </div>
               </div>
 
-          
             </div>
 
             {msg && <div className="alert alert-danger mt-3">{msg}</div>}
