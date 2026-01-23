@@ -9,6 +9,20 @@ const USERS_KEY = "techstore_users_v1";
 const SESSION_KEY = "techstore_user_v1";
 const ADMIN_CLIENTS_KEY = "admin_clients_v1";
 
+// ✅ Usuario demo (login rápido)
+// Se crea automáticamente si no existe en localStorage.
+export const DEMO_CREDENTIALS = {
+  email: "Cliente@techstore.cl",
+  password: "Cliente123",
+};
+
+const DEMO_USER = {
+  name: "Cliente Demo",
+  email: DEMO_CREDENTIALS.email,
+  password: DEMO_CREDENTIALS.password,
+  address: "Av. Calle Falsa 123",
+};
+
 function readJSON(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -20,6 +34,54 @@ function readJSON(key, fallback) {
 
 function writeJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+// ---------------------------------------------------------------------------
+//  crea un usuario demo 
+// ---------------------------------------------------------------------------
+export function seedDemoUserIfMissing() {
+  try {
+    const users = readJSON(USERS_KEY, []);
+    const exists = users.some((u) => String(u.email).toLowerCase() === DEMO_CREDENTIALS.email);
+    if (!exists) {
+      const demo = {
+        id: `u_demo_${Date.now()}`,
+        name: "Cliente Demo",
+        email: DEMO_CREDENTIALS.email,
+        password: DEMO_CREDENTIALS.password,
+        address: "Av. Calle Falsa 123",
+      };
+      users.unshift(demo);
+      writeJSON(USERS_KEY, users);
+
+      // También lo agrega a Admin > Clientes (para que se vea en el panel)
+      const clients = readJSON(ADMIN_CLIENTS_KEY, []);
+      const alreadyClient = clients.some(
+        (c) => String(c.email).toLowerCase() === DEMO_CREDENTIALS.email
+      );
+      if (!alreadyClient) {
+        const nums = clients
+          .map((c) => parseInt(String(c.code || "").replace("C", ""), 10))
+          .filter((n) => Number.isFinite(n));
+        const next = (nums.length ? Math.max(...nums) : 0) + 1;
+        const code = `C${String(next).padStart(3, "0")}`;
+
+        clients.unshift({
+          code,
+          email: demo.email,
+          name: demo.name,
+          phone: "",
+          address: demo.address,
+          region: "",
+          city: "",
+          comuna: "",
+        });
+        writeJSON(ADMIN_CLIENTS_KEY, clients);
+      }
+    }
+  } catch {
+    // si localStorage no está disponible, no hacemos nada
+  }
 }
 
 export function getCurrentUser() {
