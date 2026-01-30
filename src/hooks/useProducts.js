@@ -15,7 +15,7 @@ export function useProducts() {
         const data = await fetchProducts();
         if (alive) setProducts(data);
       } catch (e) {
-        if (alive) setError("No se pudo cargar /data/products.json");
+        if (alive) setError("No se pudo cargar el catálogo desde el backend");
       } finally {
         if (alive) setLoading(false);
       }

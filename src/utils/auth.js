@@ -1,8 +1,12 @@
 /**
- * auth.js (sin backend)
- * - Registro/Login usando localStorage
+ * auth.js (localStorage)
+ * - Registro/Login usando localStorage (flujo "cliente")
  * - Sesión activa (techstore_user_v1)
  * - Sincroniza clientes al storage del Admin (admin_clients_v1)
+ *
+ * IMPORTANTE:
+ * - El login del ADMIN va por el backend con JWT.
+ * - Este auth local se usa solo para la demo del lado cliente.
  */
 
 const USERS_KEY = "techstore_users_v1";
@@ -11,17 +15,23 @@ const ADMIN_CLIENTS_KEY = "admin_clients_v1";
 
 // ✅ Usuario demo (login rápido)
 // Se crea automáticamente si no existe en localStorage.
+// OJO: mantener email en minúscula para que el "seed" sea idempotente.
 export const DEMO_CREDENTIALS = {
-  email: "Cliente@techstore.cl",
+  email: "cliente@techstore.cl",
   password: "Cliente123",
 };
 
 const DEMO_USER = {
+  id: "u_demo", // id estable
   name: "Cliente Demo",
   email: DEMO_CREDENTIALS.email,
   password: DEMO_CREDENTIALS.password,
   address: "Av. Calle Falsa 123",
 };
+
+function normEmail(v) {
+  return String(v || "").trim().toLowerCase();
+}
 
 function readJSON(key, fallback) {
   try {
@@ -37,38 +47,36 @@ function writeJSON(key, value) {
 }
 
 // ---------------------------------------------------------------------------
-//  crea un usuario demo 
+//  crea un usuario demo (IDEMPOTENTE: no duplica aunque recargues 1000 veces)
 // ---------------------------------------------------------------------------
 export function seedDemoUserIfMissing() {
   try {
+    const demoEmail = normEmail(DEMO_CREDENTIALS.email);
+
     const users = readJSON(USERS_KEY, []);
-    const exists = users.some((u) => String(u.email).toLowerCase() === DEMO_CREDENTIALS.email);
+    const list = Array.isArray(users) ? users : [];
+    const exists = list.some((u) => normEmail(u?.email) === demoEmail);
+
     if (!exists) {
-      const demo = {
-        id: `u_demo_${Date.now()}`,
-        name: "Cliente Demo",
-        email: DEMO_CREDENTIALS.email,
-        password: DEMO_CREDENTIALS.password,
-        address: "Av. Calle Falsa 123",
-      };
-      users.unshift(demo);
-      writeJSON(USERS_KEY, users);
+      const demo = { ...DEMO_USER, email: demoEmail };
+      list.unshift(demo);
+      writeJSON(USERS_KEY, list);
 
       // También lo agrega a Admin > Clientes (para que se vea en el panel)
       const clients = readJSON(ADMIN_CLIENTS_KEY, []);
-      const alreadyClient = clients.some(
-        (c) => String(c.email).toLowerCase() === DEMO_CREDENTIALS.email
-      );
+      const cl = Array.isArray(clients) ? clients : [];
+      const alreadyClient = cl.some((c) => normEmail(c?.email) === demoEmail);
+
       if (!alreadyClient) {
-        const nums = clients
+        const nums = cl
           .map((c) => parseInt(String(c.code || "").replace("C", ""), 10))
           .filter((n) => Number.isFinite(n));
         const next = (nums.length ? Math.max(...nums) : 0) + 1;
         const code = `C${String(next).padStart(3, "0")}`;
 
-        clients.unshift({
+        cl.unshift({
           code,
-          email: demo.email,
+          email: demoEmail,
           name: demo.name,
           phone: "",
           address: demo.address,
@@ -76,12 +84,23 @@ export function seedDemoUserIfMissing() {
           city: "",
           comuna: "",
         });
-        writeJSON(ADMIN_CLIENTS_KEY, clients);
+        writeJSON(ADMIN_CLIENTS_KEY, cl);
       }
     }
   } catch {
     // si localStorage no está disponible, no hacemos nada
   }
+}
+
+/**
+ * Asegura que el usuario demo exista en localStorage, sin duplicar.
+ * Retorna el objeto de usuario demo si existe.
+ */
+export function ensureDemoUser() {
+  seedDemoUserIfMissing();
+  const demoEmail = normEmail(DEMO_CREDENTIALS.email);
+  const users = getUsers();
+  return users.find((u) => normEmail(u?.email) === demoEmail) || null;
 }
 
 export function getCurrentUser() {
@@ -113,9 +132,10 @@ export function getUsers() {
 
 export function registerUser(newUser) {
   const users = getUsers();
-  const email = String(newUser.email || "").trim().toLowerCase();
+  const email = normEmail(newUser?.email);
+
   if (!email) return { ok: false, error: "Correo inválido" };
-  if (users.some((u) => String(u.email).toLowerCase() === email)) {
+  if (users.some((u) => normEmail(u?.email) === email)) {
     return { ok: false, error: "Ese correo ya está registrado" };
   }
 
@@ -150,9 +170,10 @@ export function registerUser(newUser) {
 
 export function login(email, password) {
   const users = getUsers();
-  const e = String(email || "").trim().toLowerCase();
+  const e = normEmail(email);
   const p = String(password || "").trim();
-  const found = users.find((u) => String(u.email).toLowerCase() === e && String(u.password) === p);
+
+  const found = users.find((u) => normEmail(u?.email) === e && String(u?.password) === p);
   if (!found) return { ok: false, error: "Credenciales inválidas" };
 
   setCurrentUser({
@@ -175,10 +196,10 @@ export function syncUserToAdminClients(user) {
   const clients = readJSON(ADMIN_CLIENTS_KEY, []);
   const list = Array.isArray(clients) ? clients : [];
 
-  const email = String(user.email || "").trim().toLowerCase();
+  const email = normEmail(user?.email);
   if (!email) return;
 
-  const exists = list.some((c) => String(c.email || "").trim().toLowerCase() === email);
+  const exists = list.some((c) => normEmail(c?.email) === email);
   if (exists) return;
 
   list.unshift({

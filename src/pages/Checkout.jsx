@@ -159,7 +159,7 @@ export default function Checkout() {
                     {items.map((it) => (
                       <li key={it.id} className="list-group-item d-flex align-items-center gap-2">
                         <img
-                          src={it.img}
+                          src={it.imageUrl || it.img || "/img/productos4.jpg"}
                           alt={it.name}
                           width="48"
                           height="48"

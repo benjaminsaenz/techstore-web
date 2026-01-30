@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import NavbarMain from "../components/NavbarMain.jsx";
-import { DEMO_CREDENTIALS, login } from "../utils/auth.js";
+import { DEMO_CREDENTIALS, login, seedDemoUserIfMissing } from "../utils/auth.js";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -17,6 +17,15 @@ export default function Login() {
   const fillDemo = () => {
     setEmail(DEMO_CREDENTIALS.email);
     setPassword(DEMO_CREDENTIALS.password);
+  };
+
+  const onDemoLogin = () => {
+    // asegura que el usuario demo exista (sin duplicar)
+    seedDemoUserIfMissing();
+    setMsg("");
+    const res = login(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password);
+    if (!res.ok) return setMsg(res.error);
+    navigate(redirect, { replace: true });
   };
 
   const onSubmit = (e) => {
@@ -60,6 +69,14 @@ export default function Login() {
 
             <button className="btn btn-primary w-100" type="submit">
               Ingresar
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-outline-light w-100 mt-2"
+              onClick={onDemoLogin}
+            >
+              Ingresar con Demo
             </button>
 
             <div className="alert alert-info mt-3 mb-0">

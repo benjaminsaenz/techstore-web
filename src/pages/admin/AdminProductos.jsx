@@ -1,305 +1,269 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { getProducts, saveProducts } from "./adminStore.js";
+import { useEffect, useMemo, useState } from "react";
+import NavbarAdmin from "../../components/NavbarAdmin.jsx";
+import {
+  adminCreateProduct,
+  adminDeleteProduct,
+  adminListProducts,
+  adminUpdateProduct,
+} from "../../api/productsApi.js";
+import { isAdmin as isAdminSession } from "../AdminLogin.jsx";
+import { useNavigate } from "react-router-dom";
+import CKEditor4 from "../../components/admin/CKEditor4.jsx";
 
-const emptyProduct = {
-  code: "",
-  id: "",
-  name: "",
-  category: "",
-  price: 0,
-  stock: 0,
-  image: "/img/",
-  detail: "",
-};
+function emptyForm() {
+  return {
+    sku: "",
+    name: "",
+    category: "",
+    price: 0,
+    stock: 0,
+    imageUrl: "",
+    descriptionHtml: "",
+    active: true,
+  };
+}
 
 export default function AdminProductos() {
-  // ✅ carga inmediata desde localStorage (sin esperar useEffect)
-  const [products, setProducts] = useState(() => {
-    const data = getProducts();
-    return Array.isArray(data) ? data : [];
-  });
+  const navigate = useNavigate();
 
-  // ✅ ESTO arregla el error (q definido)
-  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [products, setProducts] = useState([]);
 
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(emptyProduct);
+  const [form, setForm] = useState(emptyForm());
+  const [editingId, setEditingId] = useState(null);
+  const isEditing = editingId !== null;
 
-  // ✅ evita guardar antes de cargar
-  const didLoad = useRef(false);
+  const canLoad = useMemo(() => isAdminSession(), []);
+
+  async function load() {
+    setError("");
+    setLoading(true);
+    try {
+      const data = await adminListProducts();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setError(
+        e?.message ||
+          "No se pudo cargar /api/admin/products. Revisa que el token esté puesto y el rol sea ADMIN."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    didLoad.current = true;
+    if (!canLoad) {
+      navigate("/admin-login");
+      return;
+    }
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (!didLoad.current) return;
-    saveProducts(products);
-  }, [products]);
-
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return products;
-    return products.filter((p) =>
-      [p.code, p.name, p.category].some((x) =>
-        String(x || "").toLowerCase().includes(term)
-      )
-    );
-  }, [products, q]);
-
-  const nextCode = () => {
-    const nums = products
-      .map((p) => parseInt(String(p.code || "").replace("P", ""), 10))
-      .filter((n) => Number.isFinite(n));
-    const next = (nums.length ? Math.max(...nums) : 0) + 1;
-    return `P${String(next).padStart(3, "0")}`;
-  };
-
-  const startAdd = () => {
-    setEditing(true);
-    setForm({ ...emptyProduct, code: nextCode(), id: `custom_${Date.now()}` });
+  const updateField = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const startEdit = (p) => {
-    setEditing(true);
-    setForm({ ...p });
+    setEditingId(p.id);
+    setForm({
+      sku: p.sku || "",
+      name: p.name || "",
+      category: p.category || "",
+      price: Number(p.price ?? 0),
+      stock: Number(p.stock ?? 0),
+      imageUrl: p.imageUrl || "",
+      descriptionHtml: p.descriptionHtml || p.description || "",
+      active: Boolean(p.active ?? true),
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const cancel = () => {
-    setEditing(false);
-    setForm(emptyProduct);
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm(emptyForm());
   };
 
-  const remove = (code) => {
-    if (!confirm("¿Eliminar producto?")) return;
-    setProducts((prev) => prev.filter((p) => p.code !== code));
-  };
-
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (form.name.trim().length < 3) return alert("Nombre muy corto");
-    if (!form.category.trim()) return alert("Falta categoría");
-    if (Number(form.price) <= 0) return alert("Precio inválido");
-    if (Number(form.stock) < 0) return alert("Stock inválido");
-    if (!String(form.image || "").startsWith("/img/"))
-      return alert('La imagen debe comenzar con "/img/" (ej: /img/mouse.jpg)');
+    // 🔒 CKEditor sometimes doesn't fire a final "change" before clicking Guardar.
+    // Read the live editor HTML directly to avoid saving an empty description.
+    const liveHtml =
+      window.__techstoreCkEditors?.adminProductDesc?.getData?.() ?? form.descriptionHtml;
 
     const payload = {
       ...form,
+      // Send multiple aliases so the backend can map regardless of naming strategy.
+      descriptionHtml: liveHtml,
+      description: liveHtml,
+      description_html: liveHtml,
       price: Number(form.price),
       stock: Number(form.stock),
+      active: Boolean(form.active),
     };
 
-    setProducts((prev) => {
-      const exists = prev.some((p) => p.code === payload.code);
-      if (exists) {
-        return prev.map((p) => (p.code === payload.code ? payload : p));
+    try {
+      if (isEditing) {
+        await adminUpdateProduct(editingId, payload);
+      } else {
+        await adminCreateProduct(payload);
       }
-      return [payload, ...prev];
-    });
+      cancelEdit();
+      await load();
+    } catch (e2) {
+      setError(e2?.message || "No se pudo guardar el producto");
+    }
+  };
 
-    cancel();
+  const remove = async (id) => {
+    if (!confirm("¿Eliminar este producto?")) return;
+    setError("");
+    try {
+      await adminDeleteProduct(id);
+      await load();
+    } catch (e) {
+      setError(e?.message || "No se pudo eliminar");
+    }
   };
 
   return (
-    <div>
-      <div className="d-flex gap-2 align-items-center mb-3">
-        <h5 className="m-0">Gestión de Productos</h5>
+    <>
+      <NavbarAdmin />
+      <div className="container admin-ui" style={{ padding: "20px" }}>
 
-        <div className="ms-auto d-flex gap-2">
-          <input
-            className="form-control"
-            style={{ width: 280 }}
-            placeholder="Buscar producto..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <button className="btn btn-primary" onClick={startAdd}>
-            + Nuevo
-          </button>
-        </div>
-      </div>
+        <h2 style={{ marginBottom: 8 }}>Administrar productos (backend)</h2>
+       
 
-      <div className="table-responsive">
-        <table className="table table-hover align-middle">
-          <thead className="table-dark">
-            <tr>
-              <th style={{ width: 90 }}>Img</th>
-              <th>Código</th>
-              <th>Producto</th>
-              <th>Categoría</th>
-              <th>Precio</th>
-              <th>Stock</th>
-              <th style={{ width: 220 }}>Detalle</th>
-              <th style={{ width: 170 }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.code}>
-                <td>
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    style={{ width: 64, height: 64, objectFit: "cover" }}
-                    className="rounded border"
-                  />
-                </td>
-                <td className="fw-bold">{p.code}</td>
-                <td>{p.name}</td>
-                <td>{p.category}</td>
-                <td>${Number(p.price).toLocaleString("es-CL")}</td>
-                <td>{p.stock}</td>
-                <td>
-                  <details>
-                    <summary className="text-primary" style={{ cursor: "pointer" }}>
-                      Ver
-                    </summary>
-                    <div className="small mt-2 text-muted">
-                      {p.detail || "Sin detalle"}
-                    </div>
-                  </details>
-                </td>
-                <td>
-                  <button
-                    className="btn btn-sm btn-warning me-2"
-                    onClick={() => startEdit(p)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => remove(p.code)}
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
-
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan="8" className="text-center text-muted py-4">
-                  No hay productos
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {editing && (
-        <div className="card mt-4">
-          <div className="card-body">
-            <div className="d-flex align-items-center">
-              <h6 className="m-0">Formulario Producto</h6>
-              <button
-                className="btn btn-sm btn-outline-secondary ms-auto"
-                onClick={cancel}
-              >
-                Cerrar
-              </button>
-            </div>
-
-            <form className="row g-3 mt-1" onSubmit={submit}>
-              <div className="col-md-2">
-                <label className="form-label">Código</label>
-                <input className="form-control" value={form.code} disabled />
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label">Nombre</label>
-                <input
-                  className="form-control"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-
-              <div className="col-md-2">
-                <label className="form-label">Categoría</label>
-                <input
-                  className="form-control"
-                  value={form.category}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, category: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-
-              <div className="col-md-2">
-                <label className="form-label">Precio</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={form.price}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, price: e.target.value }))
-                  }
-                  min={0}
-                  required
-                />
-              </div>
-
-              <div className="col-md-2">
-                <label className="form-label">Stock</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={form.stock}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, stock: e.target.value }))
-                  }
-                  min={0}
-                  required
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label">Imagen (ruta)</label>
-                <input
-                  className="form-control"
-                  placeholder="/img/mouse.jpg"
-                  value={form.image}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, image: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label">Detalle</label>
-                <input
-                  className="form-control"
-                  value={form.detail}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, detail: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div className="col-12 d-flex gap-2">
-                <button className="btn btn-success" type="submit">
-                  Guardar
-                </button>
-                <button
-                  className="btn btn-outline-secondary"
-                  type="button"
-                  onClick={cancel}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </form>
+        {error && (
+          <div
+            style={{
+              background: "#ffd7d7",
+              padding: 12,
+              borderRadius: 8,
+              marginBottom: 12,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {error}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        <form onSubmit={submit} style={{ display: "grid", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <input
+              placeholder="SKU"
+              value={form.sku}
+              onChange={(e) => updateField("sku", e.target.value)}
+              required
+            />
+            <input
+              placeholder="Nombre"
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              required
+            />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <input
+              placeholder="Categoría"
+              value={form.category}
+              onChange={(e) => updateField("category", e.target.value)}
+            />
+            <input
+              placeholder="URL imagen"
+              value={form.imageUrl}
+              onChange={(e) => updateField("imageUrl", e.target.value)}
+            />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Precio"
+              value={form.price}
+              onChange={(e) => updateField("price", e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Stock"
+              value={form.stock}
+              onChange={(e) => updateField("stock", e.target.value)}
+            />
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={!!form.active}
+                onChange={(e) => updateField("active", e.target.checked)}
+              />
+              Activo
+            </label>
+          </div>
+
+          <div>
+            <div style={{ marginBottom: 6, fontWeight: 600 }}>Descripción</div>
+            <CKEditor4
+              value={form.descriptionHtml}
+              onChange={(html) => updateField("descriptionHtml", html)}
+              instanceKey="adminProductDesc"
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <button type="submit">{isEditing ? "Guardar cambios" : "Crear producto"}</button>
+            {isEditing && (
+              <button type="button" onClick={cancelEdit}>
+                Cancelar
+              </button>
+            )}
+            <button type="button" onClick={load}>
+              Recargar
+            </button>
+          </div>
+        </form>
+
+        <hr style={{ margin: "20px 0" }} />
+
+        {loading ? (
+          <p>Cargando…</p>
+        ) : (
+          <div style={{ display: "grid", gap: 10 }}>
+            {products.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  border: "1px solid #ddd",
+                  borderRadius: 10,
+                  padding: 12,
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700 }}>
+                    {p.name} <span style={{ opacity: 0.6 }}>({p.sku})</span>
+                  </div>
+                  <div style={{ opacity: 0.8, fontSize: 14 }}>
+                    {p.category || "Sin categoría"} · ${Number(p.price ?? 0).toLocaleString()} · stock {p.stock ?? 0}
+                    {p.active === false ? " · INACTIVO" : ""}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => startEdit(p)}>Editar</button>
+                  <button onClick={() => remove(p.id)}>Eliminar</button>
+                </div>
+              </div>
+            ))}
+            {products.length === 0 && <p>No hay productos.</p>}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

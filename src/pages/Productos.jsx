@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Link, useSearchParams } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 import Footer from "../components/Footer.jsx";
@@ -9,7 +10,7 @@ import { useProducts } from "../hooks/useProducts.js";
 
 /**
  * Productos
- * - Carga catálogo desde una "API interna" (public/data/products.json) vía Axios
+ * - Carga catálogo desde el backend (Spring Boot)
  * - Permite filtrar por categoría y buscar por nombre/características
  * - Agrega productos al carrito (localStorage)
  */
@@ -33,6 +34,9 @@ export default function Productos() {
   useLayoutEffect(() => {
     if (loading || error) return;
 
+    gsap.registerPlugin(ScrollTrigger);
+    const hoverCleanups = [];
+
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
 
@@ -53,9 +57,37 @@ export default function Productos() {
         },
         "-=0.25"
       );
+
+      // Reveal sutil al hacer scroll (por si la grilla es larga)
+      gsap.from(".ts-productos-grid", {
+        scrollTrigger: {
+          trigger: ".ts-productos-grid",
+          start: "top 85%",
+          once: true,
+        },
+        opacity: 0,
+        y: 12,
+        duration: 0.6,
+      });
+
+      // Hover pro en cards (GSAP)
+      gsap.utils.toArray(".ts-product-card").forEach((el) => {
+        const onEnter = () =>
+          gsap.to(el, { y: -8, duration: 0.22, ease: "power2.out" });
+        const onLeave = () => gsap.to(el, { y: 0, duration: 0.22, ease: "power2.out" });
+        el.addEventListener("mouseenter", onEnter);
+        el.addEventListener("mouseleave", onLeave);
+        hoverCleanups.push(() => {
+          el.removeEventListener("mouseenter", onEnter);
+          el.removeEventListener("mouseleave", onLeave);
+        });
+      });
     }, rootRef);
 
-    return () => ctx.revert();
+    return () => {
+      hoverCleanups.forEach((fn) => fn());
+      ctx.revert();
+    };
   }, [loading, error]);
 
   const list = useMemo(() => {
@@ -67,11 +99,7 @@ export default function Productos() {
 
     if (query.trim()) {
       const q = query.toLowerCase();
-      items = items.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          (Array.isArray(p.features) && p.features.some((f) => String(f).toLowerCase().includes(q)))
-      );
+      items = items.filter((p) => p.name.toLowerCase().includes(q));
     }
 
     return items;
@@ -138,44 +166,47 @@ export default function Productos() {
                 </select>
               </div>
 
-              <div className="col-md-8 d-flex align-items-end justify-content-md-end mt-3 mt-md-0">
-                <div className="d-flex gap-2 flex-wrap">
-                  <Link to="/categorias" className="btn btn-outline-secondary">
-                    📦 Ver categorías
-                  </Link>
-                  <Link to="/ofertas" className="btn btn-outline-danger">
-                    🔥 Ver ofertas
-                  </Link>
-                </div>
-              </div>
+            
             </div>
 
-        <div className="row g-4 ts-productos-grid">
+        <div className="row g-4  ts-dark ts-productos-grid">
               {list.map((p) => (
                 <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={p.id}>
-                  <div className="card h-100">
-                    {p.id === "mouse1" ? (
-                      <Link to="/producto-mouse" className="text-decoration-none text-dark">
-                        <img src={p.img} className="card-img-top" alt={p.name} />
-                      </Link>
-                    ) : (
-                      <img src={p.img} className="card-img-top" alt={p.name} />
-                    )}
+                  <div className="card h-100 ts-product-card">
+                    <Link to={`/producto/${p.id}`} className="text-decoration-none">
+                      <img
+                        src={p.imageUrl || "/img/productos4.jpg"}
+                        className="card-img-top"
+                        alt={p.name}
+                      />
+                    </Link>
 
                     <div className="card-body">
-                      <h5>{p.name}</h5>
+                      <h5 className="mb-1">
+                        <Link to={`/producto/${p.id}`} className="text-decoration-none text-dark">
+                          {p.name}
+                        </Link>
+                      </h5>
 
-                      <ul className="list-unstyled small">
-                        {(p.features || []).slice(0, 3).map((f) => (
-                          <li key={f}>🟣 {f}</li>
-                        ))}
-                      </ul>
+
+                      <div className="small text-muted mb-2">Categoría: {p.category}</div>
 
                       <p className="fw-bold">{formatCLP(p.price)}</p>
+                      <div className="small mb-2">Stock: {p.stock}</div>
 
-                      <button className="btn btn-primary w-100" onClick={(e) => handleAdd(p, e)} type="button">
-                        Agregar
-                      </button>
+                      <div className="d-grid gap-2">
+                        <button
+                          className="btn btn-primary"
+                          onClick={(e) => handleAdd(p, e)}
+                          type="button"
+                        >
+                          Agregar al carrito
+                        </button>
+
+                        <Link to={`/producto/${p.id}`} className="btn btn-outline-secondary">
+                          Ver detalle
+                        </Link>
+                      </div>
 
                       <small className={`fw-bold ${added[p.id] ? "text-success" : "d-none"}`}>
                         ✔ Producto agregado

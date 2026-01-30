@@ -5,12 +5,10 @@ import AdminClientes from "./AdminClientes.jsx";
 import AdminProductos from "./AdminProductos.jsx";
 import AdminVentas from "./AdminVentas.jsx";
 import { seedIfEmpty } from "./adminStore.js";
-
-const ADMIN_KEY = "techstore_is_admin_v1";
+import { isAdmin as isAdminSession } from "../AdminLogin.jsx";
 
 export default function AdminDashboard() {
-  const isAdmin = localStorage.getItem(ADMIN_KEY) === "1";
-  if (!isAdmin) return <Navigate to="/admin-login" replace />;
+  if (!isAdminSession()) return <Navigate to="/admin-login" replace />;
 
   // ✅ SEED SIN useEffect: se ejecuta ANTES de que monten Clientes/Productos
   const seeded = useRef(false);
@@ -24,7 +22,7 @@ export default function AdminDashboard() {
       <AdminSidebar />
 
       <div className="flex-grow-1">
-        <div className="p-3 border-bottom bg-light">
+        <div className="p-3 border-bottom bg-light ts-dark">
           <h4 className="m-0">Panel Administrador</h4>
         </div>
 

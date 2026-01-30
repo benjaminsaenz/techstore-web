@@ -17,7 +17,7 @@ export default function AdminSidebar() {
     <div className="border-end" style={{ width: 280, minHeight: "100vh" }}>
       <div className="p-3 border-bottom">
         <div className="fw-bold">TechStore Admin</div>
-        <div className="text-muted small">Panel interno (sin backend)</div>
+        
       </div>
 
       <div className="list-group list-group-flush">

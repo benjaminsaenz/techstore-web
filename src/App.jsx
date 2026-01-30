@@ -5,6 +5,7 @@ import Home from "./pages/Home.jsx";
 import Nosotros from "./pages/Nosotros.jsx";
 import Productos from "./pages/Productos.jsx";
 import ProductoMouse from "./pages/ProductoMouse.jsx";
+import ProductoDetalle from "./pages/ProductoDetalle.jsx";
 import Carrito from "./pages/Carrito.jsx";
 import Contacto from "./pages/Contacto.jsx";
 import Login from "./pages/Login.jsx";
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/nosotros" element={<Nosotros />} />
         <Route path="/productos" element={<Productos />} />
+        <Route path="/producto/:id" element={<ProductoDetalle />} />
         <Route path="/producto-mouse" element={<ProductoMouse />} />
         <Route path="/categorias" element={<Categorias />} />
         <Route path="/ofertas" element={<Ofertas />} />

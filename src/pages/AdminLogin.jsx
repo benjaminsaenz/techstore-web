@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarMain from "../components/NavbarMain.jsx";
 
-const ADMIN_KEY = "techstore_is_admin_v1";
+import { apiFetch, clearAuthSession, setAuthSession } from "../api/http";
+
+const ADMIN_KEY = "techstore_is_admin_v1"; // legacy flag (kept for backwards-compat)
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -11,7 +13,7 @@ export default function AdminLogin() {
   const [err, setErr] = useState({});
   const [finalMsg, setFinalMsg] = useState("");
 
-  const validarAdmin = (e) => {
+  const validarAdmin = async (e) => {
     e.preventDefault();
 
     const errors = {};
@@ -26,16 +28,29 @@ export default function AdminLogin() {
 
     if (Object.keys(errors).length > 0) return;
 
-    const correoAdmin = "admin@techstore.cl";
-    const passAdmin = "admin123";
+    try {
+      // Backend login
+      const data = await apiFetch("/api/auth/login", {
+        method: "POST",
+        body: { email: c, password: p },
 
-    if (c === correoAdmin && p === passAdmin) {
-      localStorage.setItem(ADMIN_KEY, "1");
-      setFinalMsg("Acceso administrador exitoso ✔");
-      setTimeout(() => navigate("/admin"), 600);
-    } else {
+      });
+
+      // Persist JWT for admin API calls
+      setAuthSession({ token: data.token, role: data.role });
+      // legacy flag so old checks don't break
+      if (String(data.role).toUpperCase() === "ADMIN") {
+        localStorage.setItem(ADMIN_KEY, "1");
+      } else {
+        localStorage.removeItem(ADMIN_KEY);
+      }
+
+      setFinalMsg("Acceso exitoso ✔");
+      setTimeout(() => navigate("/admin"), 400);
+    } catch (err) {
+      clearAuthSession();
       localStorage.removeItem(ADMIN_KEY);
-      setFinalMsg("Credenciales incorrectas");
+      setFinalMsg(err?.message || "Credenciales incorrectas");
     }
   };
 
@@ -94,10 +109,14 @@ export default function AdminLogin() {
 }
 
 export function isAdmin() {
-  return localStorage.setItem("techstore_is_admin_v1", "1");
-;
+  // Prefer backend auth (JWT)
+  const role = localStorage.getItem("techstore_role") || "";
+  if (role.toUpperCase() === "ADMIN") return true;
+  // Fallback to legacy flag
+  return localStorage.getItem(ADMIN_KEY) === "1";
 }
 
 export function logoutAdmin() {
   localStorage.removeItem(ADMIN_KEY);
+  clearAuthSession();
 }

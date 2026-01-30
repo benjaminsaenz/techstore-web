@@ -77,7 +77,7 @@ export default function Carrito() {
                   {items.map((it) => (
                     <tr key={it.id}>
                       <td>
-                        <img src={it.img} width="70" alt={it.name} />
+                        <img src={it.imageUrl || it.img || "/img/productos4.jpg"} width="70" alt={it.name} />
                       </td>
                       <td>{it.name}</td>
                       <td>{formatCLP(it.price)}</td>

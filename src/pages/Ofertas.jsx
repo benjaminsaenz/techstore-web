@@ -47,7 +47,13 @@ export default function Ofertas() {
             return (
               <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={p.id}>
                 <div className="card h-100">
-                  <img src={p.img} className="card-img-top" alt={p.name} />
+                  <Link to={`/producto/${p.id}`} className="text-decoration-none">
+                    <img
+                      src={p.imageUrl || "/img/productos4.jpg"}
+                      className="card-img-top"
+                      alt={p.name}
+                    />
+                  </Link>
                   <div className="card-body">
                     <div className="d-flex align-items-center gap-2 mb-1">
                       <h5 className="m-0">{p.name}</h5>
@@ -64,13 +70,19 @@ export default function Ofertas() {
                       <p className="fw-bold mb-2">{formatCLP(finalPrice)}</p>
                     )}
 
-                    <button
-                      className="btn btn-primary w-100"
-                      type="button"
-                      onClick={() => addToCart({ ...p, price: finalPrice })}
-                    >
-                      Agregar
-                    </button>
+                    <div className="d-grid gap-2">
+                      <button
+                        className="btn btn-primary"
+                        type="button"
+                        onClick={() => addToCart({ ...p, price: finalPrice })}
+                      >
+                        Agregar al carrito
+                      </button>
+
+                      <Link to={`/producto/${p.id}`} className="btn btn-outline-secondary">
+                        Ver detalle
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>

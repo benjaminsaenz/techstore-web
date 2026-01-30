@@ -52,8 +52,58 @@ table img {
 
 /* Imágenes del carrusel */
 .carousel img {
-    height: 350px;
+    height: 300px;
     object-fit: cover;
+}
+
+
+
+/* Home: Carrusel premium */
+.ts-carousel-wrap{
+    border-radius: 1.25rem;
+    overflow: hidden;
+    box-shadow: 0 14px 40px rgba(0,0,0,.25);
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(0,0,0,.15);
+}
+.ts-carousel-img{
+    height: 320px;
+    object-fit: cover;
+    transform: scale(1.02);
+}
+.carousel-item.active .ts-carousel-img{
+    animation: ts-zoom 7s ease-in-out infinite alternate;
+}
+@keyframes ts-zoom{
+    from{ transform: scale(1.02); }
+    to{ transform: scale(1.08); }
+}
+.ts-carousel-caption{
+    background: linear-gradient(180deg, rgba(0,0,0,.0), rgba(0,0,0,.55));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 2.25rem 1rem 1.25rem;
+}
+.ts-carousel-caption h5{
+    text-shadow: 0 8px 18px rgba(0,0,0,.65);
+}
+.ts-carousel-caption p{
+    opacity: .95;
+}
+
+/* Home: barra de confianza */
+.ts-trust-item{
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: rgba(255,255,255,.9);
+    box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+.ts-trust-item i{
+    font-size: 1.35rem;
 }
 
 
@@ -69,18 +119,33 @@ table img {
     position: relative;
 }
 
+/* Fondo Three.js (decorativo) */
+.hero .ts-hero-three {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.hero .ts-hero-three canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
 /* Capa oscura sobre la imagen */
 .hero::before {
     content: "";
     position: absolute;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.55);
+    z-index: 1;
 }
 
 /* Mantiene el contenido visible */
 .hero .container {
     position: relative;
-    z-index: 1;
+    z-index: 2;
 }
 
 
@@ -216,6 +281,142 @@ table img {
 .ts-beneficios i {
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
 }
+
+/* ================================
+   Detalle de producto (HTML desde CKEditor)
+   - hace que imágenes y contenido embebido no se salgan del layout
+================================ */
+.ts-product-description img {
+  max-width: 100%;
+  height: auto;
+}
+
+.ts-product-description iframe,
+.ts-product-description video {
+  max-width: 100%;
+}
+
+.ts-product-description table {
+  width: 100%;
+  max-width: 100%;
+}
+/* ===== Destacados: texto blanco legible ===== */
+.ts-dark,
+.ts-dark * {
+  color: #fff !important;
+}
+
+/* “muted” también blanco (pero un pelín menos fuerte) */
+.ts-dark .text-muted,
+.ts-dark small,
+.ts-dark .small {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* precios y labels */
+.ts-dark .price,
+.ts-dark .precio,
+.ts-dark .product-price {
+  color: #fff !important;
+  font-weight: 700;
+}
+
+/* Links */
+.ts-dark a {
+  color: #fff !important;
+  text-decoration: none;
+}
+.ts-dark a:hover {
+  color: #fff !important;
+  text-decoration: underline;
+}
+
+/* cards en fondo oscuro */
+.ts-dark .card {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.ts-dark .card-title,
+.ts-dark .card-text,
+.ts-dark .card-body {
+  color: #fff !important;
+}
+
+/* ===== Admin UI: botones legibles en fondo oscuro ===== */
+.admin-ui button,
+.admin-ui .btn {
+  background: #f5f5f7 !important;
+  color: #111 !important;
+  border: 1px solid rgba(0,0,0,0.25) !important;
+  padding: 8px 12px !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+}
+
+.admin-ui button:hover,
+.admin-ui .btn:hover {
+  background: #e7e7ee !important;
+}
+
+.admin-ui button:active,
+.admin-ui .btn:active {
+  background: #dcdce3 !important;
+}
+
+.admin-ui button:disabled,
+.admin-ui .btn:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+/* ===== Home: Beneficios (cards legibles sobre fondo oscuro) ===== */
+.home-benefits {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.home-benefits .benefit-card {
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+  border-radius: 16px;
+  padding: 18px 22px;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+}
+
+/* Ícono */
+.home-benefits .benefit-icon {
+  font-size: 28px;
+  color: #0d6efd; /* azul pro */
+  flex-shrink: 0;
+}
+
+/* Texto */
+.home-benefits .benefit-title {
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.home-benefits .benefit-text {
+  font-size: 13px;
+  color: #444;
+}
+
+/* Hover sutil */
+.home-benefits .benefit-card:hover {
+  transform: translateY(-2px);
+  transition: all 0.2s ease;
+}
+
+
 
 
 
