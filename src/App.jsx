@@ -19,6 +19,7 @@ import PagoError from "./pages/PagoError.jsx";
 // Admin
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminRoute from "./routes/AdminRoute.jsx";
 
 /**
  * App.jsx
@@ -47,7 +48,7 @@ export default function App() {
 
         {/* Admin */}
         <Route path="/admin-login" element={<AdminLogin />} />
-        <Route path="/admin/*" element={<AdminDashboard />} />
+        <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
         {/* Fallback simple */}
         <Route path="*" element={<Home />} />

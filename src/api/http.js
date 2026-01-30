@@ -18,6 +18,7 @@ export function setAuthSession({ token, role }) {
 export function clearAuthSession() {
   localStorage.removeItem("techstore_token");
   localStorage.removeItem("techstore_role");
+  localStorage.removeItem("techstore_is_admin_v1");
 }
 
 async function parseJsonSafe(res) {

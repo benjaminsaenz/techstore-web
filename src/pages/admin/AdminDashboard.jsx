@@ -5,12 +5,9 @@ import AdminClientes from "./AdminClientes.jsx";
 import AdminProductos from "./AdminProductos.jsx";
 import AdminVentas from "./AdminVentas.jsx";
 import { seedIfEmpty } from "./adminStore.js";
-import { isAdmin as isAdminSession } from "../AdminLogin.jsx";
 
 export default function AdminDashboard() {
-  if (!isAdminSession()) return <Navigate to="/admin-login" replace />;
-
-  // ✅ SEED SIN useEffect: se ejecuta ANTES de que monten Clientes/Productos
+// ✅ SEED SIN useEffect: se ejecuta ANTES de que monten Clientes/Productos
   const seeded = useRef(false);
   if (!seeded.current) {
     seedIfEmpty();
