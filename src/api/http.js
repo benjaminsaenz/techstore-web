@@ -1,6 +1,12 @@
 // Small fetch helper with optional JWT support.
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+// IMPORTANT for production (Amplify): never default to localhost.
+// - In local dev, create .env.local with: VITE_API_URL=http://localhost:8080
+// - In production (Amplify), set VITE_API_URL to your HTTPS backend origin
+//   (e.g. https://api.tudominio.cl). If you serve the frontend and API from the
+//   same origin, you can also leave VITE_API_URL empty (""), and it will use
+//   relative requests.
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 export function getApiBaseUrl() {
   return API_BASE_URL;
